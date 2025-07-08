@@ -1,4 +1,4 @@
-const API_URL = 'http://192.168.0.34:4000/api';
+const API_URL = 'https://toursv.onrender.com/api';
 
 function handleApiError(e) {
   return { error: e.message || 'Error de red o servidor' };

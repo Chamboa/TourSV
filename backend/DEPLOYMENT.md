@@ -13,9 +13,9 @@
 - **Auto-Deploy**: Yes (para cambios en el repositorio)
 
 ### URLs de la API:
-- Base URL: `https://tu-app-name.onrender.com`
-- Health Check: `https://tu-app-name.onrender.com/`
-- API Endpoints: `https://tu-app-name.onrender.com/api/...`
+- Base URL: `https://toursv.onrender.com`
+- Health Check: `https://toursv.onrender.com/`
+- API Endpoints: `https://toursv.onrender.com/api/...`
 
 ## Endpoints disponibles:
 - `GET /` - Health check
@@ -33,4 +33,5 @@
 ## Notas importantes:
 1. El servidor se reinicia automáticamente después de 15 minutos de inactividad
 2. MongoDB Atlas está configurado para aceptar conexiones desde cualquier IP
-3. CORS está configurado para aceptar peticiones desde cualquier origen 
+3. CORS está configurado para aceptar peticiones desde cualquier origen
+4. **IMPORTANTE**: Este es el backend. El frontend es una app Expo/React Native que se ejecuta localmente o se publica en Expo. 

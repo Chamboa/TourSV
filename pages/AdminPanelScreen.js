@@ -6,7 +6,7 @@ import { getPlaces, deletePlace, getEvents, deleteEvent } from './api';
 const { width } = Dimensions.get('window');
 
 const fetchUsers = async (userId) => {
-  const res = await fetch('http://192.168.0.34:4000/api/users', {
+  const res = await fetch('https://toursv.onrender.com/api/users', {
     method: 'GET',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ userId })
@@ -14,7 +14,7 @@ const fetchUsers = async (userId) => {
   return res.json();
 };
 const updateUserRole = async (id, role, userId) => {
-  const res = await fetch(`http://192.168.0.34:4000/api/users/${id}`, {
+  const res = await fetch(`https://toursv.onrender.com/api/users/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ role, userId })
@@ -22,7 +22,7 @@ const updateUserRole = async (id, role, userId) => {
   return res.json();
 };
 const deleteUser = async (id, userId) => {
-  const res = await fetch(`http://192.168.0.34:4000/api/users/${id}`, {
+  const res = await fetch(`https://toursv.onrender.com/api/users/${id}`, {
     method: 'DELETE',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ userId })
