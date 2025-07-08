@@ -7,7 +7,9 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "build": "expo build:web",
+    "build:vercel": "expo build:web --no-minify"
   },
   "dependencies": {
     "@expo-google-fonts/roboto": "^0.4.0",

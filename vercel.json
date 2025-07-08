@@ -1,0 +1,6 @@
+{
+  "framework": "react",
+  "buildCommand": "npm run build:vercel",
+  "outputDirectory": "web-build",
+  "installCommand": "npm install"
+} 
