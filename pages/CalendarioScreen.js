@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Dimensions, TouchableOpacity, TextInput, Image, FlatList, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, TouchableOpacity, TextInput, Image, FlatList, ActivityIndicator, Alert, ScrollView } from 'react-native';
 import { Ionicons, Feather, MaterialIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getEvents, createEvent, deleteEvent } from './api';
+import PromocionesClienteScreen from './PromocionesClienteScreen';
+import ReservacionesClienteScreen from './ReservacionesClienteScreen';
 
 const { width, height } = Dimensions.get('window');
 const userImg = 'https://randomuser.me/api/portraits/women/44.jpg';
@@ -13,7 +15,7 @@ const diasSemana = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
 const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
 function getCalendarMatrix(month, year) {
-  const firstDay = new Date(year, month, 1).getDay(); // 0=Domingo
+  const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const daysInPrevMonth = new Date(year, month, 0).getDate();
   let matrix = [];
@@ -23,7 +25,6 @@ function getCalendarMatrix(month, year) {
     let week = [];
     for (let j = 0; j < 7; j++) {
       let cell = 0;
-      // Ajustar para que Lunes sea el primer día (en ES: 1=Lunes, 0=Domingo)
       let weekDay = (j + 1) % 7;
       if (!started && weekDay === (firstDay === 0 ? 6 : firstDay - 1)) started = true;
       if (started && day <= daysInMonth) {
@@ -35,7 +36,6 @@ function getCalendarMatrix(month, year) {
     matrix.push(week);
     if (day > daysInMonth) break;
   }
-  // Rellenar días previos y siguientes
   const firstWeek = matrix[0];
   let prev = daysInPrevMonth;
   for (let i = 0; i < 7; i++) {
@@ -53,13 +53,6 @@ function getCalendarMatrix(month, year) {
   return matrix;
 }
 
-const evento = {
-  nombre: 'Sunset Park',
-  dept: 'La Libertad',
-  img: 'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/1a/3e/2e/7b/sunset-park.jpg?w=700&h=-1&s=1',
-  rating: 5.0,
-};
-
 const CalendarioScreen = () => {
   const navigation = useNavigation();
   const today = new Date();
@@ -70,6 +63,7 @@ const CalendarioScreen = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [events, setEvents] = useState([]);
   const [userId, setUserId] = useState(null);
+  const [activeTab, setActiveTab] = useState('calendario');
 
   useEffect(() => {
     (async () => {
@@ -117,6 +111,7 @@ const CalendarioScreen = () => {
     setSelectedDay(1);
     setTimeout(() => setIsLoading(false), 1000);
   };
+
   const handleNextMonth = () => {
     setIsLoading(true);
     if (month === 11) {
@@ -128,17 +123,87 @@ const CalendarioScreen = () => {
     setSelectedDay(1);
     setTimeout(() => setIsLoading(false), 1000);
   };
+
   const handleSearch = (text) => {
     setIsLoading(true);
     setSearch(text);
     setTimeout(() => setIsLoading(false), 1000);
   };
 
-  const eventoVisible = evento.nombre.toLowerCase().includes(search.toLowerCase());
-
-  // Mostrar eventos del día seleccionado
   const dateStr = new Date(year, month, selectedDay).toISOString().slice(0, 10);
   const eventosDelDia = events.filter(e => e.date && e.date.slice(0, 10) === dateStr);
+
+  const renderCalendario = () => (
+    <ScrollView style={styles.scrollContainer}>
+      <View style={styles.calendarBox}>
+        <View style={styles.calendarHeaderRow}>
+          <TouchableOpacity onPress={handlePrevMonth} style={styles.monthArrow}>
+            <Ionicons name="chevron-back" size={width*0.07} color="#222" />
+          </TouchableOpacity>
+          <Text style={styles.calendarMonth}>{meses[month]} {year}</Text>
+          <TouchableOpacity onPress={handleNextMonth} style={styles.monthArrow}>
+            <Ionicons name="chevron-forward" size={width*0.07} color="#222" />
+          </TouchableOpacity>
+        </View>
+        <View style={styles.calendarRow}>
+          {diasSemana.map((d, i) => (
+            <Text key={i} style={styles.calendarDayName}>{d}</Text>
+          ))}
+        </View>
+        {matrix.map((semana, i) => (
+          <View key={i} style={styles.calendarRow}>
+            {semana.map((dia, j) => {
+              let isCurrentMonth = false;
+              if (i === 0 && dia > 7) isCurrentMonth = false;
+              else if (i === matrix.length - 1 && dia < 7) isCurrentMonth = false;
+              else isCurrentMonth = true;
+              return (
+                <TouchableOpacity
+                  key={j}
+                  style={[
+                    styles.calendarDay,
+                    isCurrentMonth && dia === selectedDay && styles.calendarDaySelected,
+                    !isCurrentMonth && { opacity: 0.3 },
+                  ]}
+                  onPress={() => isCurrentMonth && setSelectedDay(dia)}
+                  disabled={!isCurrentMonth}
+                >
+                  <Text style={[
+                    styles.calendarDayText,
+                    isCurrentMonth && dia === selectedDay && styles.calendarDayTextSelected,
+                  ]}>
+                    {dia}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        ))}
+      </View>
+
+      {/* Eventos del día */}
+      <View style={styles.eventsContainer}>
+        <Text style={styles.eventsTitle}>Eventos del {selectedDay} de {meses[month]}</Text>
+        {eventosDelDia.length > 0 ? (
+          eventosDelDia.map(ev => (
+            <View style={styles.eventCard} key={ev._id}>
+              <Text style={styles.eventTitle}>{ev.title}</Text>
+              <Text style={styles.eventDate}>{new Date(ev.date).toLocaleDateString()}</Text>
+              <TouchableOpacity style={styles.deleteBtn} onPress={() => handleDeleteEvent(ev._id)}>
+                <Ionicons name="trash" size={20} color="#E17055" />
+              </TouchableOpacity>
+            </View>
+          ))
+        ) : (
+          <Text style={styles.noEventsText}>No hay eventos para este día.</Text>
+        )}
+        <TouchableOpacity style={styles.addEventBtn} onPress={handleAddEvent}>
+          <Ionicons name="add" size={24} color="#fff" />
+          <Text style={styles.addEventText}>Agregar evento</Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
+  );
 
   return (
     <View style={styles.container}>
@@ -149,6 +214,7 @@ const CalendarioScreen = () => {
           <Image source={{ uri: userImg }} style={styles.avatar} />
         </TouchableOpacity>
       </View>
+
       {/* Search */}
       <View style={styles.searchContainer}>
         <Ionicons name="search" size={width * 0.06} color="#888" style={{ marginLeft: width * 0.025 }} />
@@ -163,91 +229,42 @@ const CalendarioScreen = () => {
           <Feather name="menu" size={width * 0.07} color="#000" style={{ marginRight: width * 0.025 }} />
         </TouchableOpacity>
       </View>
+
+      {/* Tabs */}
+      <View style={styles.tabsContainer}>
+        <TouchableOpacity 
+          style={[styles.tab, activeTab === 'calendario' && styles.activeTab]} 
+          onPress={() => setActiveTab('calendario')}
+        >
+          <Ionicons name="calendar" size={20} color={activeTab === 'calendario' ? '#2E5006' : '#888'} />
+          <Text style={[styles.tabText, activeTab === 'calendario' && styles.activeTabText]}>Calendario</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.tab, activeTab === 'promociones' && styles.activeTab]} 
+          onPress={() => setActiveTab('promociones')}
+        >
+          <Ionicons name="pricetags" size={20} color={activeTab === 'promociones' ? '#2E5006' : '#888'} />
+          <Text style={[styles.tabText, activeTab === 'promociones' && styles.activeTabText]}>Promociones</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.tab, activeTab === 'reservaciones' && styles.activeTab]} 
+          onPress={() => setActiveTab('reservaciones')}
+        >
+          <Ionicons name="bookmark" size={20} color={activeTab === 'reservaciones' ? '#2E5006' : '#888'} />
+          <Text style={[styles.tabText, activeTab === 'reservaciones' && styles.activeTabText]}>Reservaciones</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Content */}
       {isLoading ? (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', minHeight: 200 }}>
-          <ActivityIndicator size="large" color="#000" />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#2E5006" />
         </View>
       ) : (
         <>
-          {/* Calendario real */}
-          <View style={styles.calendarBox}>
-            <View style={styles.calendarHeaderRow}>
-              <TouchableOpacity onPress={handlePrevMonth} style={styles.monthArrow}><Ionicons name="chevron-back" size={width*0.07} color="#222" /></TouchableOpacity>
-              <Text style={styles.calendarMonth}>{meses[month]} {year}</Text>
-              <TouchableOpacity onPress={handleNextMonth} style={styles.monthArrow}><Ionicons name="chevron-forward" size={width*0.07} color="#222" /></TouchableOpacity>
-            </View>
-            <View style={styles.calendarRow}>
-              {diasSemana.map((d, i) => (
-                <Text key={i} style={styles.calendarDayName}>{d}</Text>
-              ))}
-            </View>
-            {matrix.map((semana, i) => (
-              <View key={i} style={styles.calendarRow}>
-                {semana.map((dia, j) => {
-                  let isCurrentMonth = false;
-                  if (i === 0 && dia > 7) isCurrentMonth = false;
-                  else if (i === matrix.length - 1 && dia < 7) isCurrentMonth = false;
-                  else isCurrentMonth = true;
-                  return (
-                    <TouchableOpacity
-                      key={j}
-                      style={[
-                        styles.calendarDay,
-                        isCurrentMonth && dia === selectedDay && styles.calendarDaySelected,
-                        !isCurrentMonth && { opacity: 0.3 },
-                      ]}
-                      onPress={() => isCurrentMonth && setSelectedDay(dia)}
-                      disabled={!isCurrentMonth}
-                    >
-                      <Text style={isCurrentMonth && dia === selectedDay ? styles.calendarDayTextSelected : styles.calendarDayText}>{dia}</Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            ))}
-          </View>
-          {/* Card de evento/lugar */}
-          {eventoVisible && (
-            <View style={styles.card}>
-              <Image source={{ uri: evento.img }} style={styles.cardImg} />
-              <View style={styles.cardOverlay} />
-              <View style={styles.cardContent}>
-                <Text style={styles.cardDept}>{evento.dept}</Text>
-                <Text style={styles.cardTitle}>{evento.nombre}</Text>
-                <View style={styles.cardRatingRow}>
-                  <MaterialIcons name="star" size={width * 0.04} color="#fff" />
-                  <Text style={styles.cardRating}>{evento.rating}</Text>
-                </View>
-                <TouchableOpacity style={styles.cardDetailsBtn}>
-                  <Text style={styles.cardDetailsText}>Más detalles</Text>
-                  <Ionicons name="chevron-forward" size={width * 0.04} color="#fff" />
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
-          {/* Card de eventos del día */}
-          {eventosDelDia.length > 0 ? (
-            eventosDelDia.map(ev => (
-              <View style={styles.card} key={ev._id}>
-                <View style={styles.cardOverlay} />
-                <View style={styles.cardContent}>
-                  <Text style={styles.cardTitle}>{ev.title}</Text>
-                  <Text style={styles.cardDept}>{new Date(ev.date).toLocaleDateString()}</Text>
-                  <TouchableOpacity style={styles.cardDetailsBtn} onPress={() => handleDeleteEvent(ev._id)}>
-                    <Text style={styles.cardDetailsText}>Eliminar</Text>
-                    <Ionicons name="trash" size={width * 0.04} color="#fff" />
-                  </TouchableOpacity>
-                </View>
-              </View>
-            ))
-          ) : (
-            <Text style={{ color: '#888', fontSize: width * 0.045, textAlign: 'center', marginTop: 20 }}>No hay eventos para este día.</Text>
-          )}
-          {/* Botón para agregar evento */}
-          <TouchableOpacity style={[styles.cardDetailsBtn, { alignSelf: 'center', marginTop: 16 }]} onPress={handleAddEvent}>
-            <Text style={styles.cardDetailsText}>Agregar evento</Text>
-            <Ionicons name="add" size={width * 0.04} color="#fff" />
-          </TouchableOpacity>
+          {activeTab === 'calendario' && renderCalendario()}
+          {activeTab === 'promociones' && <PromocionesClienteScreen />}
+          {activeTab === 'reservaciones' && <ReservacionesClienteScreen />}
         </>
       )}
     </View>
@@ -290,6 +307,42 @@ const styles = StyleSheet.create({
     color: '#222',
     marginLeft: width * 0.02,
     backgroundColor: 'transparent',
+  },
+  tabsContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    marginHorizontal: width * 0.06,
+    borderRadius: 12,
+    padding: 4,
+    marginBottom: 16,
+  },
+  tab: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  activeTab: {
+    backgroundColor: '#E8F5E9',
+  },
+  tabText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#888',
+    marginLeft: 6,
+  },
+  activeTabText: {
+    color: '#2E5006',
+  },
+  scrollContainer: {
+    flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   calendarBox: {
     backgroundColor: '#F3F3F3',
@@ -350,69 +403,61 @@ const styles = StyleSheet.create({
     fontSize: width * 0.045,
     color: '#fff',
   },
-  card: {
-    width: CARD_SIZE,
-    height: CARD_SIZE * 1.18,
-    borderRadius: width * 0.07,
-    overflow: 'hidden',
-    backgroundColor: '#ccc',
-    marginBottom: width * 0.045,
-    alignSelf: 'center',
+  eventsContainer: {
+    marginHorizontal: width * 0.06,
+    marginBottom: 20,
   },
-  cardImg: {
-    width: '100%',
-    height: '100%',
-    position: 'absolute',
-    top: 0,
-    left: 0,
-  },
-  cardOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.18)',
-  },
-  cardContent: {
-    position: 'absolute',
-    left: width * 0.045,
-    bottom: width * 0.045,
-  },
-  cardDept: {
-    color: '#fff',
+  eventsTitle: {
     fontFamily: 'Roboto_700Bold',
-    fontSize: width * 0.038,
-    marginBottom: 2,
+    fontSize: 18,
+    color: '#222',
+    marginBottom: 16,
   },
-  cardTitle: {
-    color: '#fff',
-    fontFamily: 'Roboto_700Bold',
-    fontSize: width * 0.052,
-    marginBottom: 8,
-  },
-  cardRatingRow: {
+  eventCard: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 6,
+    justifyContent: 'space-between',
   },
-  cardRating: {
-    color: '#fff',
+  eventTitle: {
     fontFamily: 'Roboto_700Bold',
-    fontSize: width * 0.038,
-    marginLeft: 4,
+    fontSize: 16,
+    color: '#222',
+    flex: 1,
   },
-  cardDetailsBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.22)',
-    borderRadius: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    marginTop: 2,
-    alignSelf: 'flex-start',
-  },
-  cardDetailsText: {
-    color: '#fff',
+  eventDate: {
     fontFamily: 'Roboto_400Regular',
-    fontSize: width * 0.038,
-    marginRight: 2,
+    fontSize: 14,
+    color: '#888',
+    marginRight: 12,
+  },
+  deleteBtn: {
+    padding: 8,
+  },
+  noEventsText: {
+    color: '#888',
+    fontSize: 16,
+    textAlign: 'center',
+    marginTop: 20,
+    fontFamily: 'Roboto_400Regular',
+  },
+  addEventBtn: {
+    backgroundColor: '#2E5006',
+    borderRadius: 12,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 16,
+  },
+  addEventText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
   },
 });
 

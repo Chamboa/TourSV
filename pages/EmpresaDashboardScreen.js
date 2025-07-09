@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getPlaces } from './api';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 
+
 const { width } = Dimensions.get('window');
 
 export default function EmpresaDashboardScreen({ navigation }) {
@@ -40,9 +41,6 @@ export default function EmpresaDashboardScreen({ navigation }) {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.openDrawer()}>
-          <Ionicons name="menu" size={28} color="#333" />
-        </TouchableOpacity>
         <Text style={styles.headerTitle}>Panel de Empresa</Text>
         <View style={{ width: 28 }} />
       </View>
@@ -78,9 +76,9 @@ export default function EmpresaDashboardScreen({ navigation }) {
           <Text style={styles.notifText}>Tienes {totalNotis} notificaciones nuevas</Text>
         </TouchableOpacity>
         <View style={styles.quickRow}>
-          <TouchableOpacity style={styles.quickBtn} onPress={() => navigation.navigate('MisLugares')}>
+          <TouchableOpacity style={styles.quickBtn} onPress={() => navigation.navigate('Lugares')}>
             <MaterialIcons name="place" size={24} color="#0984A3" />
-            <Text style={styles.quickText}>Mis Lugares</Text>
+            <Text style={styles.quickText}>Lugares</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.quickBtn} onPress={() => navigation.navigate('CrearLugar')}>
             <Ionicons name="add-circle" size={24} color="#0984A3" />
@@ -92,6 +90,8 @@ export default function EmpresaDashboardScreen({ navigation }) {
           </TouchableOpacity>
         </View>
       </ScrollView>
+      
+
     </View>
   );
 }

@@ -12,7 +12,8 @@ import {
   ScrollView,
   Image,
   Switch,
-  Dimensions
+  Dimensions,
+  SafeAreaView
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -329,246 +330,248 @@ export default function PromocionesScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Gestión de Promociones</Text>
-        <TouchableOpacity style={styles.addButton} onPress={() => openModal()}>
-          <Ionicons name="add" size={24} color="#fff" />
-        </TouchableOpacity>
-      </View>
-
-      {/* Filtros */}
-      <View style={styles.filtersContainer}>
-        <View style={styles.filterRow}>
-          <Picker
-            selectedValue={filtroCategoria}
-            style={styles.filterPicker}
-            onValueChange={setFiltroCategoria}
-          >
-            <Picker.Item label="Todas las categorías" value="" />
-            {CATEGORIAS.map(cat => (
-              <Picker.Item key={cat} label={cat} value={cat} />
-            ))}
-          </Picker>
-
-          <Picker
-            selectedValue={filtroEstado}
-            style={styles.filterPicker}
-            onValueChange={setFiltroEstado}
-          >
-            <Picker.Item label="Todas" value="todas" />
-            <Picker.Item label="Activas" value="activas" />
-            <Picker.Item label="Inactivas" value="inactivas" />
-          </Picker>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#F8FAF7' }}>
+      <ScrollView contentContainerStyle={{ padding: 18, paddingBottom: 60, paddingTop: 48 }}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Gestión de Promociones</Text>
+          <TouchableOpacity style={styles.addButton} onPress={() => openModal()}>
+            <Ionicons name="add" size={24} color="#fff" />
+          </TouchableOpacity>
         </View>
-      </View>
 
-      <FlatList
-        data={getFilteredPromos()}
-        keyExtractor={item => item._id}
-        renderItem={renderPromoCard}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Ionicons name="pricetag-outline" size={64} color="#ccc" />
-            <Text style={styles.emptyText}>No hay promociones</Text>
-            <Text style={styles.emptySubtext}>
-              {lugares.length === 0 
-                ? 'Crea lugares primero para agregar promociones'
-                : 'Crea tu primera promoción'
-              }
-            </Text>
-          </View>
-        }
-        contentContainerStyle={{ paddingBottom: 30 }}
-        showsVerticalScrollIndicator={false}
-      />
-
-      {/* Modal para crear/editar promoción */}
-      <Modal
-        visible={modalVisible}
-        animationType="slide"
-        presentationStyle="pageSheet"
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>
-              {editingPromo ? 'Editar Promoción' : 'Nueva Promoción'}
-            </Text>
-            <TouchableOpacity onPress={() => setModalVisible(false)}>
-              <Ionicons name="close" size={24} color="#666" />
-            </TouchableOpacity>
-          </View>
-
-          <ScrollView style={styles.modalContent}>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Título de la promoción *"
-              value={form.titulo}
-              onChangeText={v => setForm(prev => ({ ...prev, titulo: v }))}
-            />
-
-            <TextInput
-              style={[styles.modalInput, styles.textArea]}
-              placeholder="Descripción"
-              value={form.descripcion}
-              onChangeText={v => setForm(prev => ({ ...prev, descripcion: v }))}
-              multiline
-              numberOfLines={3}
-            />
-
+        {/* Filtros */}
+        <View style={styles.filtersContainer}>
+          <View style={styles.filterRow}>
             <Picker
-              selectedValue={form.placeId}
-              style={styles.modalInput}
-              onValueChange={v => {
-                const lugar = lugares.find(l => l._id === v);
-                setForm(prev => ({ 
-                  ...prev, 
-                  placeId: v, 
-                  lugar: lugar ? lugar.nombre : '' 
-                }));
-              }}
+              selectedValue={filtroCategoria}
+              style={styles.filterPicker}
+              onValueChange={setFiltroCategoria}
             >
-              <Picker.Item label="Selecciona un lugar *" value="" />
-              {lugares.map(l => (
-                <Picker.Item key={l._id} label={l.nombre} value={l._id} />
-              ))}
-            </Picker>
-
-            <View style={styles.row}>
-              <TextInput
-                style={[styles.modalInput, styles.halfInput]}
-                placeholder="Descuento (%)"
-                value={form.descuento}
-                onChangeText={v => setForm(prev => ({ ...prev, descuento: v }))}
-                keyboardType="numeric"
-              />
-              <TextInput
-                style={[styles.modalInput, styles.halfInput]}
-                placeholder="Precio original"
-                value={form.precioOriginal}
-                onChangeText={v => setForm(prev => ({ ...prev, precioOriginal: v }))}
-                keyboardType="numeric"
-              />
-            </View>
-
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Precio con descuento"
-              value={form.precioDescuento}
-              onChangeText={v => setForm(prev => ({ ...prev, precioDescuento: v }))}
-              keyboardType="numeric"
-            />
-
-            <View style={styles.row}>
-              <TouchableOpacity
-                style={[styles.dateButton, styles.halfInput]}
-                onPress={() => showDatePickerModal('fechaInicio')}
-              >
-                <Ionicons name="calendar" size={16} color="#0984A3" />
-                <Text style={styles.dateButtonText}>
-                  Inicio: {form.fechaInicio.toLocaleDateString()}
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.dateButton, styles.halfInput]}
-                onPress={() => showDatePickerModal('fechaFin')}
-              >
-                <Ionicons name="calendar" size={16} color="#0984A3" />
-                <Text style={styles.dateButtonText}>
-                  Fin: {form.fechaFin ? form.fechaFin.toLocaleDateString() : 'Sin límite'}
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            <Picker
-              selectedValue={form.categoria}
-              style={styles.modalInput}
-              onValueChange={v => setForm(prev => ({ ...prev, categoria: v }))}
-            >
+              <Picker.Item label="Todas las categorías" value="" />
               {CATEGORIAS.map(cat => (
                 <Picker.Item key={cat} label={cat} value={cat} />
               ))}
             </Picker>
 
-            <TextInput
-              style={styles.modalInput}
-              placeholder="URL de imagen (opcional)"
-              value={form.imagen}
-              onChangeText={v => setForm(prev => ({ ...prev, imagen: v }))}
-            />
-
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Cupones disponibles (-1 = ilimitado)"
-              value={form.cuponesDisponibles}
-              onChangeText={v => setForm(prev => ({ ...prev, cuponesDisponibles: v }))}
-              keyboardType="numeric"
-            />
-
-            <TextInput
-              style={[styles.modalInput, styles.textArea]}
-              placeholder="Términos y condiciones"
-              value={form.condiciones}
-              onChangeText={v => setForm(prev => ({ ...prev, condiciones: v }))}
-              multiline
-              numberOfLines={3}
-            />
-
-            <View style={styles.switchRow}>
-              <Text style={styles.switchLabel}>Promoción destacada</Text>
-              <Switch
-                value={form.destacada}
-                onValueChange={v => setForm(prev => ({ ...prev, destacada: v }))}
-                trackColor={{ false: '#ccc', true: '#0984A3' }}
-                thumbColor={form.destacada ? '#fff' : '#f4f3f4'}
-              />
-            </View>
-
-            <View style={styles.switchRow}>
-              <Text style={styles.switchLabel}>Promoción activa</Text>
-              <Switch
-                value={form.activa}
-                onValueChange={v => setForm(prev => ({ ...prev, activa: v }))}
-                trackColor={{ false: '#ccc', true: '#0984A3' }}
-                thumbColor={form.activa ? '#fff' : '#f4f3f4'}
-              />
-            </View>
-          </ScrollView>
-
-          <View style={styles.modalFooter}>
-            <TouchableOpacity 
-              style={styles.cancelButton} 
-              onPress={() => setModalVisible(false)}
+            <Picker
+              selectedValue={filtroEstado}
+              style={styles.filterPicker}
+              onValueChange={setFiltroEstado}
             >
-              <Text style={styles.cancelButtonText}>Cancelar</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={styles.saveButton} 
-              onPress={handleSave}
-              disabled={loading}
-            >
-              {loading ? (
-                <ActivityIndicator size="small" color="#fff" />
-              ) : (
-                <Text style={styles.saveButtonText}>
-                  {editingPromo ? 'Actualizar' : 'Crear'}
-                </Text>
-              )}
-            </TouchableOpacity>
+              <Picker.Item label="Todas" value="todas" />
+              <Picker.Item label="Activas" value="activas" />
+              <Picker.Item label="Inactivas" value="inactivas" />
+            </Picker>
           </View>
         </View>
-      </Modal>
 
-      {showDatePicker && (
-        <DateTimePicker
-          value={form[datePickerField] || new Date()}
-          mode={datePickerMode}
-          display="default"
-          onChange={handleDateChange}
+        <FlatList
+          data={getFilteredPromos()}
+          keyExtractor={item => item._id}
+          renderItem={renderPromoCard}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Ionicons name="pricetag-outline" size={64} color="#ccc" />
+              <Text style={styles.emptyText}>No hay promociones</Text>
+              <Text style={styles.emptySubtext}>
+                {lugares.length === 0 
+                  ? 'Crea lugares primero para agregar promociones'
+                  : 'Crea tu primera promoción'
+                }
+              </Text>
+            </View>
+          }
+          contentContainerStyle={{ paddingBottom: 30 }}
+          showsVerticalScrollIndicator={false}
         />
-      )}
-    </View>
+
+        {/* Modal para crear/editar promoción */}
+        <Modal
+          visible={modalVisible}
+          animationType="slide"
+          presentationStyle="pageSheet"
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>
+                {editingPromo ? 'Editar Promoción' : 'Nueva Promoción'}
+              </Text>
+              <TouchableOpacity onPress={() => setModalVisible(false)}>
+                <Ionicons name="close" size={24} color="#666" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.modalContent}>
+              <TextInput
+                style={styles.modalInput}
+                placeholder="Título de la promoción *"
+                value={form.titulo}
+                onChangeText={v => setForm(prev => ({ ...prev, titulo: v }))}
+              />
+
+              <TextInput
+                style={[styles.modalInput, styles.textArea]}
+                placeholder="Descripción"
+                value={form.descripcion}
+                onChangeText={v => setForm(prev => ({ ...prev, descripcion: v }))}
+                multiline
+                numberOfLines={3}
+              />
+
+              <Picker
+                selectedValue={form.placeId}
+                style={styles.modalInput}
+                onValueChange={v => {
+                  const lugar = lugares.find(l => l._id === v);
+                  setForm(prev => ({ 
+                    ...prev, 
+                    placeId: v, 
+                    lugar: lugar ? lugar.nombre : '' 
+                  }));
+                }}
+              >
+                <Picker.Item label="Selecciona un lugar *" value="" />
+                {lugares.map(l => (
+                  <Picker.Item key={l._id} label={l.nombre} value={l._id} />
+                ))}
+              </Picker>
+
+              <View style={styles.row}>
+                <TextInput
+                  style={[styles.modalInput, styles.halfInput]}
+                  placeholder="Descuento (%)"
+                  value={form.descuento}
+                  onChangeText={v => setForm(prev => ({ ...prev, descuento: v }))}
+                  keyboardType="numeric"
+                />
+                <TextInput
+                  style={[styles.modalInput, styles.halfInput]}
+                  placeholder="Precio original"
+                  value={form.precioOriginal}
+                  onChangeText={v => setForm(prev => ({ ...prev, precioOriginal: v }))}
+                  keyboardType="numeric"
+                />
+              </View>
+
+              <TextInput
+                style={styles.modalInput}
+                placeholder="Precio con descuento"
+                value={form.precioDescuento}
+                onChangeText={v => setForm(prev => ({ ...prev, precioDescuento: v }))}
+                keyboardType="numeric"
+              />
+
+              <View style={styles.row}>
+                <TouchableOpacity
+                  style={[styles.dateButton, styles.halfInput]}
+                  onPress={() => showDatePickerModal('fechaInicio')}
+                >
+                  <Ionicons name="calendar" size={16} color="#0984A3" />
+                  <Text style={styles.dateButtonText}>
+                    Inicio: {form.fechaInicio.toLocaleDateString()}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.dateButton, styles.halfInput]}
+                  onPress={() => showDatePickerModal('fechaFin')}
+                >
+                  <Ionicons name="calendar" size={16} color="#0984A3" />
+                  <Text style={styles.dateButtonText}>
+                    Fin: {form.fechaFin ? form.fechaFin.toLocaleDateString() : 'Sin límite'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              <Picker
+                selectedValue={form.categoria}
+                style={styles.modalInput}
+                onValueChange={v => setForm(prev => ({ ...prev, categoria: v }))}
+              >
+                {CATEGORIAS.map(cat => (
+                  <Picker.Item key={cat} label={cat} value={cat} />
+                ))}
+              </Picker>
+
+              <TextInput
+                style={styles.modalInput}
+                placeholder="URL de imagen (opcional)"
+                value={form.imagen}
+                onChangeText={v => setForm(prev => ({ ...prev, imagen: v }))}
+              />
+
+              <TextInput
+                style={styles.modalInput}
+                placeholder="Cupones disponibles (-1 = ilimitado)"
+                value={form.cuponesDisponibles}
+                onChangeText={v => setForm(prev => ({ ...prev, cuponesDisponibles: v }))}
+                keyboardType="numeric"
+              />
+
+              <TextInput
+                style={[styles.modalInput, styles.textArea]}
+                placeholder="Términos y condiciones"
+                value={form.condiciones}
+                onChangeText={v => setForm(prev => ({ ...prev, condiciones: v }))}
+                multiline
+                numberOfLines={3}
+              />
+
+              <View style={styles.switchRow}>
+                <Text style={styles.switchLabel}>Promoción destacada</Text>
+                <Switch
+                  value={form.destacada}
+                  onValueChange={v => setForm(prev => ({ ...prev, destacada: v }))}
+                  trackColor={{ false: '#ccc', true: '#0984A3' }}
+                  thumbColor={form.destacada ? '#fff' : '#f4f3f4'}
+                />
+              </View>
+
+              <View style={styles.switchRow}>
+                <Text style={styles.switchLabel}>Promoción activa</Text>
+                <Switch
+                  value={form.activa}
+                  onValueChange={v => setForm(prev => ({ ...prev, activa: v }))}
+                  trackColor={{ false: '#ccc', true: '#0984A3' }}
+                  thumbColor={form.activa ? '#fff' : '#f4f3f4'}
+                />
+              </View>
+            </ScrollView>
+
+            <View style={styles.modalFooter}>
+              <TouchableOpacity 
+                style={styles.cancelButton} 
+                onPress={() => setModalVisible(false)}
+              >
+                <Text style={styles.cancelButtonText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.saveButton} 
+                onPress={handleSave}
+                disabled={loading}
+              >
+                {loading ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.saveButtonText}>
+                    {editingPromo ? 'Actualizar' : 'Crear'}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+
+        {showDatePicker && (
+          <DateTimePicker
+            value={form[datePickerField] || new Date()}
+            mode={datePickerMode}
+            display="default"
+            onChange={handleDateChange}
+          />
+        )}
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 

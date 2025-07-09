@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Promotion = require('../models/Promotion');
+const notificationService = require('../services/notificationService');
 
 // Listar promociones con filtros avanzados
 router.get('/', async (req, res) => {
@@ -129,6 +130,17 @@ router.post('/', async (req, res) => {
     });
 
     await promo.save();
+    
+    // Notificar a todos los clientes sobre la nueva promoción
+    if (promo.activa) {
+      try {
+        await notificationService.notifyNewPromotion(promo);
+      } catch (notificationError) {
+        console.error('Error enviando notificación de promoción:', notificationError);
+        // No fallar la creación de la promoción por error en notificación
+      }
+    }
+    
     res.status(201).json(promo);
   } catch (err) {
     res.status(400).json({ error: err.message });

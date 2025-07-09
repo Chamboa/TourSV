@@ -10,12 +10,14 @@ import {
   Modal,
   ScrollView,
   TextInput,
-  Dimensions
+  Dimensions,
+  SafeAreaView
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getEmpresaReservaciones, updateReservationStatus, getReservacionesEstadisticas } from './api';
 import { Picker } from '@react-native-picker/picker';
+import { useNavigation } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
 
@@ -35,6 +37,7 @@ export default function ReservacionesEmpresaScreen() {
   const [reservacionSeleccionada, setReservacionSeleccionada] = useState(null);
   const [estadisticas, setEstadisticas] = useState(null);
   const [notasEmpresa, setNotasEmpresa] = useState('');
+  const navigation = useNavigation();
 
   useEffect(() => {
     (async () => {
@@ -113,94 +116,6 @@ export default function ReservacionesEmpresaScreen() {
     return ESTADOS[estado] || ESTADOS.pendiente;
   };
 
-  const renderReservacionCard = ({ item }) => {
-    const estadoInfo = getEstadoInfo(item.estado);
-    
-    return (
-      <TouchableOpacity
-        style={styles.card}
-        onPress={() => {
-          setReservacionSeleccionada(item);
-          setModalVisible(true);
-        }}
-      >
-        <View style={styles.cardHeader}>
-          <View style={styles.cardTitle}>
-            <Text style={styles.lugarName}>{item.placeId?.nombre || 'Lugar no disponible'}</Text>
-            <View style={[styles.estadoBadge, { backgroundColor: estadoInfo.color }]}>
-              <Ionicons name={estadoInfo.icon} size={12} color="white" />
-              <Text style={styles.estadoText}>{estadoInfo.label}</Text>
-            </View>
-          </View>
-          <Text style={styles.codigoReservacion}>{item.codigoConfirmacion}</Text>
-        </View>
-
-        <View style={styles.cardDetails}>
-          <View style={styles.detailRow}>
-            <Ionicons name="person" size={14} color="#0984A3" />
-            <Text style={styles.detailText}>{item.userId?.name || 'Cliente'}</Text>
-          </View>
-
-          <View style={styles.detailRow}>
-            <Ionicons name="calendar" size={14} color="#A3B65A" />
-            <Text style={styles.detailText}>
-              {formatDate(item.fechaReservacion)} a las {formatTime(item.horaReservacion)}
-            </Text>
-          </View>
-
-          <View style={styles.detailRow}>
-            <Ionicons name="people" size={14} color="#E17055" />
-            <Text style={styles.detailText}>{item.numeroPersonas} personas</Text>
-          </View>
-
-          <View style={styles.detailRow}>
-            <Ionicons name="pricetag" size={14} color="#FFD700" />
-            <Text style={styles.detailText}>{formatPrice(item.precioFinal)}</Text>
-          </View>
-
-          {item.promotionId && (
-            <View style={styles.detailRow}>
-              <Ionicons name="gift" size={14} color="#9C27B0" />
-              <Text style={styles.detailText}>Promoción: {item.promotionId.titulo}</Text>
-            </View>
-          )}
-        </View>
-
-        <View style={styles.cardActions}>
-          {item.estado === 'pendiente' && (
-            <>
-              <TouchableOpacity
-                style={styles.confirmButton}
-                onPress={() => handleUpdateStatus(item._id, 'confirmada')}
-              >
-                <Ionicons name="checkmark" size={16} color="white" />
-                <Text style={styles.confirmButtonText}>Confirmar</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => handleUpdateStatus(item._id, 'cancelada')}
-              >
-                <Ionicons name="close" size={16} color="white" />
-                <Text style={styles.cancelButtonText}>Rechazar</Text>
-              </TouchableOpacity>
-            </>
-          )}
-
-          {item.estado === 'confirmada' && (
-            <TouchableOpacity
-              style={styles.completeButton}
-              onPress={() => handleUpdateStatus(item._id, 'completada')}
-            >
-              <Ionicons name="trophy" size={16} color="white" />
-              <Text style={styles.completeButtonText}>Completar</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      </TouchableOpacity>
-    );
-  };
-
   const renderEstadisticas = () => {
     if (!estadisticas) return null;
 
@@ -249,8 +164,7 @@ export default function ReservacionesEmpresaScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#F8FAF7' }}>
       <View style={styles.header}>
         <Text style={styles.title}>Gestión de Reservaciones</Text>
         <View style={styles.filterContainer}>
@@ -267,15 +181,96 @@ export default function ReservacionesEmpresaScreen() {
           </Picker>
         </View>
       </View>
-
-      {/* Estadísticas */}
       {renderEstadisticas()}
-
-      {/* Lista de reservaciones */}
       <FlatList
         data={reservaciones}
         keyExtractor={item => item._id}
-        renderItem={renderReservacionCard}
+        renderItem={({ item }) => {
+          const estadoInfo = getEstadoInfo(item.estado);
+          return (
+            <View style={styles.card}>
+              <View style={styles.cardHeader}>
+                <View style={styles.cardTitle}>
+                  <Text style={{ color: '#0984A3', textDecorationLine: 'underline', fontWeight: 'bold' }}>{item.placeId?.nombre || 'Lugar no disponible'}</Text>
+                  <View style={[styles.estadoBadge, { backgroundColor: estadoInfo.color }]}> 
+                    <Ionicons name={estadoInfo.icon} size={12} color="white" />
+                    <Text style={styles.estadoText}>{estadoInfo.label}</Text>
+                  </View>
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  {item.placeId && item.placeId._id && (
+                    <TouchableOpacity onPress={() => navigation.navigate('EstadisticasLugar', { placeId: item.placeId._id })} style={{ marginRight: 8 }}>
+                      <Ionicons name="stats-chart" size={22} color="#2E5006" />
+                    </TouchableOpacity>
+                  )}
+                  <TouchableOpacity onPress={() => { setReservacionSeleccionada(item); setModalVisible(true); }}>
+                    <Ionicons name="information-circle-outline" size={22} color="#0984A3" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => { setReservacionSeleccionada(item); setModalVisible(true); }}
+              >
+                <View style={styles.cardDetails}>
+                  <View style={styles.detailRow}>
+                    <Ionicons name="person" size={14} color="#0984A3" />
+                    <Text style={styles.detailText}>{item.userId?.name || 'Cliente'}</Text>
+                  </View>
+                  <View style={styles.detailRow}>
+                    <Ionicons name="calendar" size={14} color="#A3B65A" />
+                    <Text style={styles.detailText}>
+                      {formatDate(item.fechaReservacion)} a las {formatTime(item.horaReservacion)}
+                    </Text>
+                  </View>
+                  <View style={styles.detailRow}>
+                    <Ionicons name="people" size={14} color="#E17055" />
+                    <Text style={styles.detailText}>{item.numeroPersonas} personas</Text>
+                  </View>
+                  <View style={styles.detailRow}>
+                    <Ionicons name="pricetag" size={14} color="#FFD700" />
+                    <Text style={styles.detailText}>{formatPrice(item.precioFinal)}</Text>
+                  </View>
+                  {item.promotionId && (
+                    <View style={styles.detailRow}>
+                      <Ionicons name="gift" size={14} color="#9C27B0" />
+                      <Text style={styles.detailText}>Promoción: {item.promotionId.titulo}</Text>
+                    </View>
+                  )}
+                </View>
+              </TouchableOpacity>
+              <View style={styles.cardActions}>
+                {item.estado === 'pendiente' && (
+                  <>
+                    <TouchableOpacity
+                      style={styles.confirmButton}
+                      onPress={() => handleUpdateStatus(item._id, 'confirmada')}
+                    >
+                      <Ionicons name="checkmark" size={16} color="white" />
+                      <Text style={styles.confirmButtonText}>Confirmar</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.cancelButton}
+                      onPress={() => handleUpdateStatus(item._id, 'cancelada')}
+                    >
+                      <Ionicons name="close" size={16} color="white" />
+                      <Text style={styles.cancelButtonText}>Rechazar</Text>
+                    </TouchableOpacity>
+                  </>
+                )}
+                {item.estado === 'confirmada' && (
+                  <TouchableOpacity
+                    style={styles.completeButton}
+                    onPress={() => handleUpdateStatus(item._id, 'completada')}
+                  >
+                    <Ionicons name="trophy" size={16} color="white" />
+                    <Text style={styles.completeButtonText}>Completar</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            </View>
+          );
+        }}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Ionicons name="calendar-outline" size={64} color="#ccc" />
@@ -288,10 +283,9 @@ export default function ReservacionesEmpresaScreen() {
             </Text>
           </View>
         }
-        contentContainerStyle={{ paddingBottom: 30 }}
+        contentContainerStyle={{ padding: 18, paddingBottom: 60, paddingTop: 48 }}
         showsVerticalScrollIndicator={false}
       />
-
       {/* Modal de detalles */}
       <Modal
         visible={modalVisible}
@@ -404,7 +398,7 @@ export default function ReservacionesEmpresaScreen() {
           )}
         </View>
       </Modal>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -429,7 +423,7 @@ const styles = StyleSheet.create({
   ratingLabel: { fontSize: 14, color: '#666' },
   ratingAmount: { fontSize: 16, fontWeight: 'bold', color: '#FFD700' },
   card: { backgroundColor: '#fff', margin: 12, borderRadius: 12, padding: 16, elevation: 2 },
-  cardHeader: { marginBottom: 12 },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   cardTitle: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   lugarName: { fontSize: 18, fontWeight: 'bold', color: '#0984A3', flex: 1 },
   estadoBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12 },

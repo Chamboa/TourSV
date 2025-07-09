@@ -4,6 +4,7 @@ const Reservation = require('../models/Reservation');
 const Place = require('../models/Place');
 const Promotion = require('../models/Promotion');
 const User = require('../models/User');
+const notificationService = require('../services/notificationService');
 
 // Obtener reservaciones del cliente
 router.get('/cliente/:userId', async (req, res) => {
@@ -173,6 +174,14 @@ router.post('/', async (req, res) => {
     await reservacion.populate('placeId', 'nombre direccion');
     await reservacion.populate('promotionId', 'titulo descuento');
 
+    // Notificar a la empresa sobre la nueva reservación
+    try {
+      await notificationService.notifyNewReservation(reservacion);
+    } catch (notificationError) {
+      console.error('Error enviando notificación de reservación:', notificationError);
+      // No fallar la creación de la reservación por error en notificación
+    }
+
     console.log('Reservación creada exitosamente:', reservacion);
     res.status(201).json(reservacion);
   } catch (err) {
@@ -206,6 +215,14 @@ router.put('/:id/estado', async (req, res) => {
 
     if (!reservacion) {
       return res.status(404).json({ error: 'Reservación no encontrada' });
+    }
+
+    // Notificar al cliente sobre el cambio de estado
+    try {
+      await notificationService.notifyReservationStatusChange(reservacion, estado);
+    } catch (notificationError) {
+      console.error('Error enviando notificación de cambio de estado:', notificationError);
+      // No fallar la actualización por error en notificación
     }
 
     res.json(reservacion);

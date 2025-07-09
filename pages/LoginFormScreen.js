@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Dimensions, Alert } from 'react-native';
 import { useFonts, Roboto_700Bold } from '@expo-google-fonts/roboto';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { loginUser } from './api';
+import { UserContext } from './UserContext';
 
 const { width, height } = Dimensions.get('window');
 
@@ -10,6 +11,7 @@ export default function LoginFormScreen({ navigation }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   let [fontsLoaded] = useFonts({ Roboto_700Bold });
+  const { setUser } = useContext(UserContext);
   if (!fontsLoaded) return null;
   const handleSignIn = async () => {
     try {
@@ -18,11 +20,11 @@ export default function LoginFormScreen({ navigation }) {
       if (res.user) {
         await AsyncStorage.removeItem('user');
         await AsyncStorage.setItem('user', JSON.stringify(res.user));
-        console.log('Usuario guardado en AsyncStorage');
+        setUser(res.user);
         if (res.user.role === 'empresa') {
-          navigation.reset({ index: 0, routes: [{ name: 'AuthenticatedDrawer' }] });
-        } else {
-          navigation.reset({ index: 0, routes: [{ name: 'AuthenticatedDrawer' }] });
+          navigation.reset({ index: 0, routes: [{ name: 'EmpresaTabs' }] });
+        } else if (res.user.role === 'user') {
+          navigation.reset({ index: 0, routes: [{ name: 'ClienteTabs' }] });
         }
       } else {
         if (res.error === 'Usuario no encontrado') {

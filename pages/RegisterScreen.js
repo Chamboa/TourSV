@@ -11,19 +11,58 @@ export default function RegisterScreen({ navigation }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('user');
+  const [isLoading, setIsLoading] = useState(false);
   let [fontsLoaded] = useFonts({ Roboto_700Bold });
   if (!fontsLoaded) return null;
   const handleRegister = async () => {
+    // Validaciones básicas
+    if (!name.trim()) {
+      Alert.alert('Error', 'Por favor ingresa tu nombre');
+      return;
+    }
+    if (!email.trim()) {
+      Alert.alert('Error', 'Por favor ingresa tu email');
+      return;
+    }
+    if (!password.trim()) {
+      Alert.alert('Error', 'Por favor ingresa una contraseña');
+      return;
+    }
+    if (password.length < 6) {
+      Alert.alert('Error', 'La contraseña debe tener al menos 6 caracteres');
+      return;
+    }
+
+    setIsLoading(true);
     try {
       const res = await registerUser(name, email, password, role);
       if (res.user) {
-        await AsyncStorage.setItem('user', JSON.stringify(res.user));
-        navigation.reset({ index: 0, routes: [{ name: 'ClienteTabs' }] });
+        // Mostrar mensaje de éxito
+        Alert.alert(
+          '¡Registro Exitoso!', 
+          'Tu cuenta ha sido creada correctamente. Ahora puedes iniciar sesión.',
+          [
+            {
+              text: 'OK',
+              onPress: () => {
+                // Limpiar los campos del formulario
+                setName('');
+                setEmail('');
+                setPassword('');
+                setRole('user');
+                // Navegar a la pantalla de login
+                navigation.navigate('SignIn');
+              }
+            }
+          ]
+        );
       } else {
         Alert.alert('Error', res.error || 'Registro fallido');
       }
     } catch (e) {
       Alert.alert('Error', 'No se pudo conectar al servidor');
+    } finally {
+      setIsLoading(false);
     }
   };
   const roleOptions = [
@@ -88,8 +127,21 @@ export default function RegisterScreen({ navigation }) {
             </TouchableOpacity>
           ))}
         </View>
-        <TouchableOpacity style={styles.buttonPrimary} onPress={handleRegister}>
-          <Text style={styles.buttonPrimaryText}>Create Account</Text>
+        <TouchableOpacity 
+          style={[styles.buttonPrimary, isLoading && styles.buttonDisabled]} 
+          onPress={handleRegister}
+          disabled={isLoading}
+        >
+          <Text style={styles.buttonPrimaryText}>
+            {isLoading ? 'Creando cuenta...' : 'Create Account'}
+          </Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={styles.buttonSecondary} 
+          onPress={() => navigation.navigate('SignIn')}
+        >
+          <Text style={styles.buttonSecondaryText}>Ya tengo cuenta</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -141,6 +193,26 @@ const styles = StyleSheet.create({
   },
   buttonPrimaryText: {
     color: '#fff',
+    fontFamily: 'Roboto_700Bold',
+    fontSize: 15,
+    letterSpacing: 1,
+  },
+  buttonDisabled: {
+    backgroundColor: '#A3B65A',
+    opacity: 0.7,
+  },
+  buttonSecondary: {
+    backgroundColor: '#fff',
+    borderRadius: 18,
+    paddingVertical: 10,
+    width: '100%',
+    alignItems: 'center',
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: '#A3B65A',
+  },
+  buttonSecondaryText: {
+    color: '#A3B65A',
     fontFamily: 'Roboto_700Bold',
     fontSize: 15,
     letterSpacing: 1,

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Image, Alert, ActivityIndicator, Modal, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Image, Alert, ActivityIndicator, Modal, ScrollView, SafeAreaView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { updateUser } from './api';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
@@ -50,48 +50,50 @@ export default function PerfilScreen() {
   if (loading) return <View style={styles.container}><ActivityIndicator size="large" color="#0984A3" /></View>;
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: '#F8FAF7' }} contentContainerStyle={{ alignItems: 'center', padding: 0 }}>
-      <View style={styles.headerBg} />
-      <View style={styles.card}>
-        <View style={styles.avatarBox}>
-          <Image source={user.img ? { uri: user.img } : require('../assets/icon.png')} style={styles.avatar} />
-          <TouchableOpacity style={styles.editBtn} onPress={() => setEditModal(true)}>
-            <Ionicons name="create" size={22} color="#fff" />
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#F8FAF7' }}>
+      <ScrollView contentContainerStyle={{ padding: 18, paddingBottom: 60, paddingTop: 48, alignItems: 'center' }}>
+        <View style={styles.headerBg} />
+        <View style={[styles.card, { maxWidth: 400, width: '100%' }]}>
+          <View style={styles.avatarBox}>
+            <Image source={user.img ? { uri: user.img } : require('../assets/icon.png')} style={styles.avatar} />
+            <TouchableOpacity style={styles.editBtn} onPress={() => setEditModal(true)}>
+              <Ionicons name="create" size={22} color="#fff" />
+            </TouchableOpacity>
+          </View>
+          <Text style={styles.name}>{user.nombre}</Text>
+          <Text style={styles.desc}>{user.descripcion || 'Sin descripción'}</Text>
+          <View style={styles.infoRow}><Ionicons name="mail" size={18} color="#0984A3" /><Text style={styles.infoText}>{user.email}</Text></View>
+          <View style={styles.infoRow}><MaterialIcons name="business" size={18} color="#0984A3" /><Text style={styles.infoText}>{user.role}</Text></View>
+          <View style={styles.infoRow}><Ionicons name="calendar" size={18} color="#0984A3" /><Text style={styles.infoText}>{user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}</Text></View>
+          <TouchableOpacity style={styles.passBtn} onPress={() => Alert.alert('Función próximamente', 'Aquí podrás cambiar tu contraseña')}>
+            <Ionicons name="key" size={18} color="#fff" />
+            <Text style={styles.passBtnText}>Cambiar contraseña</Text>
           </TouchableOpacity>
         </View>
-        <Text style={styles.name}>{user.nombre}</Text>
-        <Text style={styles.desc}>{user.descripcion || 'Sin descripción'}</Text>
-        <View style={styles.infoRow}><Ionicons name="mail" size={18} color="#0984A3" /><Text style={styles.infoText}>{user.email}</Text></View>
-        <View style={styles.infoRow}><MaterialIcons name="business" size={18} color="#0984A3" /><Text style={styles.infoText}>{user.role}</Text></View>
-        <View style={styles.infoRow}><Ionicons name="calendar" size={18} color="#0984A3" /><Text style={styles.infoText}>{user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}</Text></View>
-        <TouchableOpacity style={styles.passBtn} onPress={() => Alert.alert('Función próximamente', 'Aquí podrás cambiar tu contraseña')}>
-          <Ionicons name="key" size={18} color="#fff" />
-          <Text style={styles.passBtnText}>Cambiar contraseña</Text>
+        <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
+          <Ionicons name="log-out-outline" size={22} color="#fff" />
+          <Text style={styles.logoutText}>Cerrar sesión</Text>
         </TouchableOpacity>
-      </View>
-      <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
-        <Ionicons name="log-out-outline" size={22} color="#fff" />
-        <Text style={styles.logoutText}>Cerrar sesión</Text>
-      </TouchableOpacity>
-      <Modal visible={editModal} animationType="slide" transparent>
-        <View style={styles.modalBg}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Editar Perfil</Text>
-            <TextInput style={styles.input} placeholder={(user && user.role === 'empresa') ? 'Nombre de empresa' : 'Nombre'} value={form.nombre} onChangeText={v => setForm(f => ({ ...f, nombre: v }))} />
-            <TextInput style={styles.input} placeholder="Descripción" value={form.descripcion} onChangeText={v => setForm(f => ({ ...f, descripcion: v }))} />
-            <TextInput style={styles.input} placeholder="Logo/Avatar (URL)" value={form.img} onChangeText={v => setForm(f => ({ ...f, img: v }))} />
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}>
-              <TouchableOpacity style={[styles.modalBtn, { backgroundColor: '#A3B65A' }]} onPress={() => setEditModal(false)}>
-                <Text style={styles.modalBtnText}>Cancelar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.modalBtn} onPress={handleSave} disabled={saving}>
-                <Text style={styles.modalBtnText}>{saving ? 'Guardando...' : 'Guardar'}</Text>
-              </TouchableOpacity>
+        <Modal visible={editModal} animationType="slide" transparent>
+          <View style={styles.modalBg}>
+            <View style={styles.modalCard}>
+              <Text style={styles.modalTitle}>Editar Perfil</Text>
+              <TextInput style={styles.input} placeholder={(user && user.role === 'empresa') ? 'Nombre de empresa' : 'Nombre'} value={form.nombre} onChangeText={v => setForm(f => ({ ...f, nombre: v }))} />
+              <TextInput style={styles.input} placeholder="Descripción" value={form.descripcion} onChangeText={v => setForm(f => ({ ...f, descripcion: v }))} />
+              <TextInput style={styles.input} placeholder="Logo/Avatar (URL)" value={form.img} onChangeText={v => setForm(f => ({ ...f, img: v }))} />
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}>
+                <TouchableOpacity style={[styles.modalBtn, { backgroundColor: '#A3B65A' }]} onPress={() => setEditModal(false)}>
+                  <Text style={styles.modalBtnText}>Cancelar</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.modalBtn} onPress={handleSave} disabled={saving}>
+                  <Text style={styles.modalBtnText}>{saving ? 'Guardando...' : 'Guardar'}</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
-        </View>
-      </Modal>
-    </ScrollView>
+        </Modal>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 

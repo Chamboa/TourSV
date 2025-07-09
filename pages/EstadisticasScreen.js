@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, ScrollView, SafeAreaView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getEmpresaEstadisticas } from './api';
 import { Dimensions } from 'react-native';
@@ -73,144 +73,146 @@ export default function EstadisticasScreen() {
   const maxReservaciones = Math.max(...safeStats.reservacionesPorMes.map(m => m?.reservaciones || 0), 1);
 
   return (
-    <ScrollView style={styles.scroll} contentContainerStyle={{ alignItems: 'center', padding: 18 }}>
-      <Text style={styles.title}>Estadísticas de Empresa</Text>
-      
-      {/* Métricas principales */}
-      <View style={styles.metricsBox}>
-        <Text style={styles.metric}>Promociones creadas: <Text style={styles.metricValue}>{safeStats.totalPromociones}</Text></Text>
-        <Text style={styles.metric}>Cupones usados: <Text style={styles.metricValue}>{safeStats.totalCuponesUsados}</Text></Text>
-        <Text style={styles.metric}>Promociones activas: <Text style={styles.metricValue}>{safeStats.activas}</Text></Text>
-        <Text style={styles.metric}>Promociones inactivas: <Text style={styles.metricValue}>{safeStats.inactivas}</Text></Text>
-        <Text style={styles.metric}>Promociones destacadas: <Text style={styles.metricValue}>{safeStats.destacadas}</Text></Text>
-      </View>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#F8FAF7' }}>
+      <ScrollView contentContainerStyle={{ padding: 18, paddingBottom: 60, paddingTop: 48 }}>
+        <Text style={styles.title}>Estadísticas de Empresa</Text>
+        
+        {/* Métricas principales */}
+        <View style={styles.metricsBox}>
+          <Text style={styles.metric}>Promociones creadas: <Text style={styles.metricValue}>{safeStats.totalPromociones}</Text></Text>
+          <Text style={styles.metric}>Cupones usados: <Text style={styles.metricValue}>{safeStats.totalCuponesUsados}</Text></Text>
+          <Text style={styles.metric}>Promociones activas: <Text style={styles.metricValue}>{safeStats.activas}</Text></Text>
+          <Text style={styles.metric}>Promociones inactivas: <Text style={styles.metricValue}>{safeStats.inactivas}</Text></Text>
+          <Text style={styles.metric}>Promociones destacadas: <Text style={styles.metricValue}>{safeStats.destacadas}</Text></Text>
+        </View>
 
-      {/* Estadísticas de Reservaciones */}
-      <View style={styles.metricsBox}>
-        <Text style={styles.sectionTitle}>📅 Estadísticas de Reservaciones</Text>
-        <Text style={styles.metric}>Total de reservaciones: <Text style={styles.metricValue}>{safeStats.reservaciones.total}</Text></Text>
-        <Text style={styles.metric}>Pendientes: <Text style={styles.metricValue}>{safeStats.reservaciones.pendientes}</Text></Text>
-        <Text style={styles.metric}>Confirmadas: <Text style={styles.metricValue}>{safeStats.reservaciones.confirmadas}</Text></Text>
-        <Text style={styles.metric}>Completadas: <Text style={styles.metricValue}>{safeStats.reservaciones.completadas}</Text></Text>
-        <Text style={styles.metric}>Canceladas: <Text style={styles.metricValue}>{safeStats.reservaciones.canceladas}</Text></Text>
-        <Text style={styles.metric}>Ingresos totales: <Text style={styles.metricValue}>${safeStats.reservaciones.ingresos.toFixed(2)}</Text></Text>
-        <Text style={styles.metric}>Calificación promedio: <Text style={styles.metricValue}>⭐ {safeStats.reservaciones.calificacionPromedio}</Text></Text>
-      </View>
+        {/* Estadísticas de Reservaciones */}
+        <View style={styles.metricsBox}>
+          <Text style={styles.sectionTitle}>📅 Estadísticas de Reservaciones</Text>
+          <Text style={styles.metric}>Total de reservaciones: <Text style={styles.metricValue}>{safeStats.reservaciones.total}</Text></Text>
+          <Text style={styles.metric}>Pendientes: <Text style={styles.metricValue}>{safeStats.reservaciones.pendientes}</Text></Text>
+          <Text style={styles.metric}>Confirmadas: <Text style={styles.metricValue}>{safeStats.reservaciones.confirmadas}</Text></Text>
+          <Text style={styles.metric}>Completadas: <Text style={styles.metricValue}>{safeStats.reservaciones.completadas}</Text></Text>
+          <Text style={styles.metric}>Canceladas: <Text style={styles.metricValue}>{safeStats.reservaciones.canceladas}</Text></Text>
+          <Text style={styles.metric}>Ingresos totales: <Text style={styles.metricValue}>${safeStats.reservaciones.ingresos.toFixed(2)}</Text></Text>
+          <Text style={styles.metric}>Calificación promedio: <Text style={styles.metricValue}>⭐ {safeStats.reservaciones.calificacionPromedio}</Text></Text>
+        </View>
 
-      {/* Gráfica de categorías */}
-      {categorias.length > 0 && (
-        <>
-          <Text style={styles.sectionTitle}>Promociones por categoría</Text>
-          <View style={styles.chartContainer}>
-            {categorias.map((c, i) => (
-              <View key={c.name} style={styles.barItem}>
-                <View style={styles.barLabel}>
-                  <Text style={styles.barText}>{c.name}</Text>
-                  <Text style={styles.barValue}>{c.count}</Text>
-                </View>
-                <View style={styles.barContainer}>
-                  <View 
-                    style={[
-                      styles.bar, 
-                      { 
-                        width: `${(c.count / maxCategoria) * 100}%`,
-                        backgroundColor: ['#0984A3', '#A3B65A', '#E17055', '#FFD700', '#2E5006', '#888', '#ccc'][i % 7]
-                      }
-                    ]} 
-                  />
-                </View>
-              </View>
-            ))}
-          </View>
-        </>
-      )}
-
-      {/* Gráfica de cupones por mes */}
-      {safeStats.cuponesPorMes.length > 0 && (
-        <>
-          <Text style={styles.sectionTitle}>Evolución de cupones usados (últimos 12 meses)</Text>
-          <View style={styles.chartContainer}>
-            {safeStats.cuponesPorMes.map((m, i) => (
-              <View key={m?.label || i} style={styles.barItem}>
-                <View style={styles.barLabel}>
-                  <Text style={styles.barText}>{m?.label || `Mes ${i+1}`}</Text>
-                  <Text style={styles.barValue}>{m?.cupones || 0}</Text>
-                </View>
-                <View style={styles.barContainer}>
-                  <View 
-                    style={[
-                      styles.bar, 
-                      { 
-                        width: `${((m?.cupones || 0) / maxCupones) * 100}%`,
-                        backgroundColor: '#0984A3'
-                      }
-                    ]} 
-                  />
-                </View>
-              </View>
-            ))}
-          </View>
-        </>
-      )}
-
-      {/* Gráfica de reservaciones por mes */}
-      {safeStats.reservacionesPorMes.length > 0 && (
-        <>
-          <Text style={styles.sectionTitle}>📈 Evolución de reservaciones (últimos 12 meses)</Text>
-          <View style={styles.chartContainer}>
-            {safeStats.reservacionesPorMes.map((m, i) => (
-              <View key={m?.label || i} style={styles.barItem}>
-                <View style={styles.barLabel}>
-                  <Text style={styles.barText}>{m?.label || `Mes ${i+1}`}</Text>
-                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Text style={styles.barValue}>{m?.reservaciones || 0}</Text>
-                    <Text style={[styles.barValue, { marginLeft: 8, fontSize: 12, color: '#E17055' }]}>
-                      ${(m?.ingresos || 0).toFixed(0)}
-                    </Text>
+        {/* Gráfica de categorías */}
+        {categorias.length > 0 && (
+          <>
+            <Text style={styles.sectionTitle}>Promociones por categoría</Text>
+            <View style={styles.chartContainer}>
+              {categorias.map((c, i) => (
+                <View key={c.name} style={styles.barItem}>
+                  <View style={styles.barLabel}>
+                    <Text style={styles.barText}>{c.name}</Text>
+                    <Text style={styles.barValue}>{c.count}</Text>
+                  </View>
+                  <View style={styles.barContainer}>
+                    <View 
+                      style={[
+                        styles.bar, 
+                        { 
+                          width: `${(c.count / maxCategoria) * 100}%`,
+                          backgroundColor: ['#0984A3', '#A3B65A', '#E17055', '#FFD700', '#2E5006', '#888', '#ccc'][i % 7]
+                        }
+                      ]} 
+                    />
                   </View>
                 </View>
-                <View style={styles.barContainer}>
-                  <View 
-                    style={[
-                      styles.bar, 
-                      { 
-                        width: `${((m?.reservaciones || 0) / maxReservaciones) * 100}%`,
-                        backgroundColor: '#4CAF50'
-                      }
-                    ]} 
-                  />
+              ))}
+            </View>
+          </>
+        )}
+
+        {/* Gráfica de cupones por mes */}
+        {safeStats.cuponesPorMes.length > 0 && (
+          <>
+            <Text style={styles.sectionTitle}>Evolución de cupones usados (últimos 12 meses)</Text>
+            <View style={styles.chartContainer}>
+              {safeStats.cuponesPorMes.map((m, i) => (
+                <View key={m?.label || i} style={styles.barItem}>
+                  <View style={styles.barLabel}>
+                    <Text style={styles.barText}>{m?.label || `Mes ${i+1}`}</Text>
+                    <Text style={styles.barValue}>{m?.cupones || 0}</Text>
+                  </View>
+                  <View style={styles.barContainer}>
+                    <View 
+                      style={[
+                        styles.bar, 
+                        { 
+                          width: `${((m?.cupones || 0) / maxCupones) * 100}%`,
+                          backgroundColor: '#0984A3'
+                        }
+                      ]} 
+                    />
+                  </View>
                 </View>
-              </View>
-            ))}
-          </View>
-        </>
-      )}
+              ))}
+            </View>
+          </>
+        )}
 
-      {/* Lugares publicados */}
-      {safeStats.lugares.length > 0 && (
-        <>
-          <Text style={styles.sectionTitle}>Lugares publicados</Text>
-          <View style={{ width: '100%', marginTop: 10 }}>
-            {safeStats.lugares.map((l, i) => (
-              <View key={l?._id || i} style={styles.topLugar}>
-                <Text style={styles.topLugarName}>{i+1}. {l?.nombre || 'Lugar sin nombre'}</Text>
-                <Text style={styles.topLugarValue}>❤️ {l?.favoritos || 0}  👁️ {l?.visitas || 0}</Text>
-              </View>
-            ))}
-          </View>
-        </>
-      )}
+        {/* Gráfica de reservaciones por mes */}
+        {safeStats.reservacionesPorMes.length > 0 && (
+          <>
+            <Text style={styles.sectionTitle}>📈 Evolución de reservaciones (últimos 12 meses)</Text>
+            <View style={styles.chartContainer}>
+              {safeStats.reservacionesPorMes.map((m, i) => (
+                <View key={m?.label || i} style={styles.barItem}>
+                  <View style={styles.barLabel}>
+                    <Text style={styles.barText}>{m?.label || `Mes ${i+1}`}</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <Text style={styles.barValue}>{m?.reservaciones || 0}</Text>
+                      <Text style={[styles.barValue, { marginLeft: 8, fontSize: 12, color: '#E17055' }]}>
+                        ${(m?.ingresos || 0).toFixed(0)}
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={styles.barContainer}>
+                    <View 
+                      style={[
+                        styles.bar, 
+                        { 
+                          width: `${((m?.reservaciones || 0) / maxReservaciones) * 100}%`,
+                          backgroundColor: '#4CAF50'
+                        }
+                      ]} 
+                    />
+                  </View>
+                </View>
+              ))}
+            </View>
+          </>
+        )}
 
-      {/* Mensaje si no hay datos */}
-      {categorias.length === 0 && safeStats.cuponesPorMes.length === 0 && safeStats.lugares.length === 0 && safeStats.reservaciones.total === 0 && (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>No hay datos de estadísticas disponibles</Text>
-          <Text style={styles.emptySubtext}>Crea promociones, lugares y recibe reservaciones para ver estadísticas</Text>
-        </View>
-      )}
-      
-      <Text style={styles.note}>* Las estadísticas se actualizan en tiempo real.</Text>
-    </ScrollView>
+        {/* Lugares publicados */}
+        {safeStats.lugares.length > 0 && (
+          <>
+            <Text style={styles.sectionTitle}>Lugares publicados</Text>
+            <View style={{ width: '100%', marginTop: 10 }}>
+              {safeStats.lugares.map((l, i) => (
+                <View key={l?._id || i} style={styles.topLugar}>
+                  <Text style={styles.topLugarName}>{i+1}. {l?.nombre || 'Lugar sin nombre'}</Text>
+                  <Text style={styles.topLugarValue}>❤️ {l?.favoritos || 0}  👁️ {l?.visitas || 0}</Text>
+                </View>
+              ))}
+            </View>
+          </>
+        )}
+
+        {/* Mensaje si no hay datos */}
+        {categorias.length === 0 && safeStats.cuponesPorMes.length === 0 && safeStats.lugares.length === 0 && safeStats.reservaciones.total === 0 && (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>No hay datos de estadísticas disponibles</Text>
+            <Text style={styles.emptySubtext}>Crea promociones, lugares y recibe reservaciones para ver estadísticas</Text>
+          </View>
+        )}
+        
+        <Text style={styles.note}>* Las estadísticas se actualizan en tiempo real.</Text>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 

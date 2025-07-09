@@ -142,6 +142,13 @@ router.get('/empresas/:id/estadisticas', async (req, res) => {
     const lugares = await Place.find({ userId: empresaId });
     const lugarIds = lugares.map(l => l._id);
 
+    // Contar favoritos reales para cada lugar
+    const Favorite = require('../models/Favorite');
+    const favoritosPorLugar = {};
+    for (const lugarId of lugarIds) {
+      favoritosPorLugar[lugarId] = await Favorite.countDocuments({ lugarId });
+    }
+
     // Estadísticas de reservaciones
     const Reservation = require('../models/Reservation');
     const reservaciones = await Reservation.find({ placeId: { $in: lugarIds } });
@@ -199,7 +206,7 @@ router.get('/empresas/:id/estadisticas', async (req, res) => {
       lugares: lugares.map(l => ({
         _id: l._id,
         nombre: l.nombre,
-        favoritos: l.favoritos || 0,
+        favoritos: favoritosPorLugar[l._id] || 0,
         visitas: l.visitas || 0
       })),
       // Estadísticas de reservaciones

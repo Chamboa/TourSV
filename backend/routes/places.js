@@ -20,7 +20,14 @@ router.get('/:id', async (req, res) => {
   try {
     const place = await Place.findById(req.params.id);
     if (!place) return res.status(404).json({ error: 'Lugar no encontrado' });
-    res.json(place);
+    // Contar favoritos reales
+    const Favorite = require('../models/Favorite');
+    const favoritos = await Favorite.countDocuments({ lugarId: place._id });
+    // Puedes agregar visitas reales aquí si tienes ese modelo
+    res.json({
+      ...place.toObject(),
+      favoritos
+    });
   } catch (err) {
     res.status(500).json({ error: 'Error al obtener lugar' });
   }

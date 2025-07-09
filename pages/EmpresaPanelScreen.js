@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, Dimensions, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, Dimensions, ActivityIndicator, SafeAreaView, ScrollView, TextInput } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getPlaces, updatePlace, deletePlace } from './api';
 
@@ -64,56 +64,59 @@ export default function EmpresaPanelScreen({ navigation }) {
   };
 
   return (
-    <View style={styles.scroll}>
-      <Text style={styles.title}>Mis Lugares Turísticos</Text>
-      {showEdit && (
-        <View style={styles.editBox}>
-          <Text style={styles.sectionTitle}>Editar lugar</Text>
-          <TextInput style={styles.input} placeholder="Nombre*" value={editForm.nombre} onChangeText={v => setEditForm(f => ({ ...f, nombre: v }))} />
-          <TextInput style={styles.input} placeholder="Departamento*" value={editForm.dept} onChangeText={v => setEditForm(f => ({ ...f, dept: v }))} />
-          <TextInput style={styles.input} placeholder="Imagen (URL)" value={editForm.img} onChangeText={v => setEditForm(f => ({ ...f, img: v }))} />
-          <TextInput style={styles.input} placeholder="Descripción" value={editForm.descripcion} onChangeText={v => setEditForm(f => ({ ...f, descripcion: v }))} />
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-            <TouchableOpacity style={styles.button} onPress={handleUpdate} disabled={isLoading}>
-              <Text style={styles.buttonText}>Actualizar</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.button, { backgroundColor: '#888' }]} onPress={() => { setShowEdit(false); setEditId(null); }}>
-              <Text style={styles.buttonText}>Cancelar</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      )}
-      {isLoading ? (
-        <ActivityIndicator size="large" color="#0984A3" style={{ marginTop: 30 }} />
-      ) : (
-        <FlatList
-          data={lugares}
-          keyExtractor={item => item._id}
-          renderItem={({ item }) => (
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>{item.nombre}</Text>
-              <Text style={styles.cardDept}>{item.dept}</Text>
-              <Text style={styles.cardDesc}>{item.descripcion}</Text>
-              <View style={{ flexDirection: 'row', marginTop: 8 }}>
-                <TouchableOpacity style={styles.cardBtn} onPress={() => handleEdit(item)}><Text>Editar</Text></TouchableOpacity>
-                <TouchableOpacity style={[styles.cardBtn, { backgroundColor: '#E74C3C' }]} onPress={() => handleDelete(item._id)}><Text style={{ color: '#fff' }}>Eliminar</Text></TouchableOpacity>
-              </View>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#F8FAF7' }}>
+      <ScrollView contentContainerStyle={{ padding: 18, paddingBottom: 60, paddingTop: 48 }}>
+        <Text style={styles.title}>Mis Lugares Turísticos</Text>
+        {showEdit && (
+          <View style={styles.editBox}>
+            <Text style={styles.sectionTitle}>Editar lugar</Text>
+            <TextInput style={styles.input} placeholder="Nombre*" value={editForm.nombre} onChangeText={v => setEditForm(f => ({ ...f, nombre: v }))} />
+            <TextInput style={styles.input} placeholder="Departamento*" value={editForm.dept} onChangeText={v => setEditForm(f => ({ ...f, dept: v }))} />
+            <TextInput style={styles.input} placeholder="Imagen (URL)" value={editForm.img} onChangeText={v => setEditForm(f => ({ ...f, img: v }))} />
+            <TextInput style={styles.input} placeholder="Descripción" value={editForm.descripcion} onChangeText={v => setEditForm(f => ({ ...f, descripcion: v }))} />
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+              <TouchableOpacity style={styles.button} onPress={handleUpdate} disabled={isLoading}>
+                <Text style={styles.buttonText}>Actualizar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.button, { backgroundColor: '#888' }]} onPress={() => { setShowEdit(false); setEditId(null); }}>
+                <Text style={styles.buttonText}>Cancelar</Text>
+              </TouchableOpacity>
             </View>
-          )}
-          ListEmptyComponent={<Text style={{ color: '#888', textAlign: 'center', marginTop: 20 }}>No hay lugares aún.</Text>}
-          refreshing={isLoading}
-          onRefresh={() => user && (getPlaces(user.id).then(data => setLugares(data)))}
-          style={{ marginBottom: 40 }}
-        />
-      )}
-      <TouchableOpacity style={styles.fab} onPress={() => navigation.navigate('CrearLugar')}>
-        <Text style={styles.fabText}>+ Crear Lugar</Text>
-      </TouchableOpacity>
-    </View>
+          </View>
+        )}
+        {isLoading ? (
+          <ActivityIndicator size="large" color="#0984A3" style={{ marginTop: 30 }} />
+        ) : (
+          <FlatList
+            data={lugares}
+            keyExtractor={item => item._id}
+            renderItem={({ item }) => (
+              <View style={styles.card}>
+                <Text style={styles.cardTitle}>{item.nombre}</Text>
+                <Text style={styles.cardDept}>{item.dept}</Text>
+                <Text style={styles.cardDesc}>{item.descripcion}</Text>
+                <View style={{ flexDirection: 'row', marginTop: 8 }}>
+                  <TouchableOpacity style={styles.cardBtn} onPress={() => handleEdit(item)}><Text>Editar</Text></TouchableOpacity>
+                  <TouchableOpacity style={[styles.cardBtn, { backgroundColor: '#E74C3C' }]} onPress={() => handleDelete(item._id)}><Text style={{ color: '#fff' }}>Eliminar</Text></TouchableOpacity>
+                  <TouchableOpacity style={[styles.cardBtn, { backgroundColor: '#2E5006' }]} onPress={() => navigation.navigate('EstadisticasLugar', { placeId: item._id })}>
+                    <Text style={{ color: '#fff' }}>Estadísticas</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+            ListEmptyComponent={<Text style={{ color: '#888', textAlign: 'center', marginTop: 20 }}>No hay lugares aún.</Text>}
+            refreshing={isLoading}
+            onRefresh={() => user && (getPlaces(user.id).then(data => setLugares(data)))}
+            style={{ marginBottom: 40 }}
+          />
+        )}
+        <TouchableOpacity style={styles.fab} onPress={() => navigation.navigate('CrearLugar')}>
+          <Text style={styles.fabText}>+ Crear Lugar</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
-
-import { TextInput } from 'react-native';
 
 const styles = StyleSheet.create({
   scroll: { flex: 1, backgroundColor: '#F8FAF7', padding: 18 },

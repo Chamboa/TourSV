@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ActivityIndicator, SafeAreaView, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createPlace } from './api';
 
@@ -17,7 +17,7 @@ export default function CrearLugarScreen({ navigation }) {
       const nuevo = await createPlace(form, user.id);
       setForm({ nombre: '', dept: '', img: '', descripcion: '' });
       Alert.alert('Éxito', 'Lugar creado correctamente');
-      navigation.navigate('MisLugares');
+      navigation.navigate('Lugares');
     } catch (e) {
       Alert.alert('Error', e.message || 'No se pudo crear el lugar');
     }
@@ -25,16 +25,18 @@ export default function CrearLugarScreen({ navigation }) {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Crear Nuevo Lugar</Text>
-      <TextInput style={styles.input} placeholder="Nombre*" value={form.nombre} onChangeText={v => setForm(f => ({ ...f, nombre: v }))} />
-      <TextInput style={styles.input} placeholder="Departamento*" value={form.dept} onChangeText={v => setForm(f => ({ ...f, dept: v }))} />
-      <TextInput style={styles.input} placeholder="Imagen (URL)" value={form.img} onChangeText={v => setForm(f => ({ ...f, img: v }))} />
-      <TextInput style={styles.input} placeholder="Descripción" value={form.descripcion} onChangeText={v => setForm(f => ({ ...f, descripcion: v }))} />
-      <TouchableOpacity style={styles.button} onPress={handleSave} disabled={loading}>
-        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Crear</Text>}
-      </TouchableOpacity>
-    </View>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#F8FAF7' }}>
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 70, paddingTop: 56, alignItems: 'center' }}>
+        <Text style={styles.title}>Crear Nuevo Lugar</Text>
+        <TextInput style={styles.input} placeholder="Nombre*" value={form.nombre} onChangeText={v => setForm(f => ({ ...f, nombre: v }))} />
+        <TextInput style={styles.input} placeholder="Departamento*" value={form.dept} onChangeText={v => setForm(f => ({ ...f, dept: v }))} />
+        <TextInput style={styles.input} placeholder="Imagen (URL)" value={form.img} onChangeText={v => setForm(f => ({ ...f, img: v }))} />
+        <TextInput style={styles.input} placeholder="Descripción" value={form.descripcion} onChangeText={v => setForm(f => ({ ...f, descripcion: v }))} />
+        <TouchableOpacity style={styles.button} onPress={handleSave} disabled={loading}>
+          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Crear</Text>}
+        </TouchableOpacity>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 

@@ -1,46 +1,83 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Ionicons } from '@expo/vector-icons';
 import EmpresaDashboardScreen from './EmpresaDashboardScreen';
 import EmpresaPanelScreen from './EmpresaPanelScreen';
-import PerfilScreen from './PerfilScreen';
-import CrearLugarScreen from './CrearLugarScreen';
-import EstadisticasScreen from './EstadisticasScreen';
-import PromocionesScreen from './PromocionesScreen';
 import ReservacionesEmpresaScreen from './ReservacionesEmpresaScreen';
-import NotificacionesScreen from './NotificacionesScreen';
-import { Ionicons } from '@expo/vector-icons';
+import PerfilScreen from './PerfilScreen';
 
 const Tab = createBottomTabNavigator();
+
+const TABS = [
+  {
+    name: 'Inicio',
+    component: EmpresaDashboardScreen,
+    icon: 'home',
+  },
+  {
+    name: 'Lugares',
+    component: EmpresaPanelScreen,
+    icon: 'business',
+  },
+  {
+    name: 'Reservas',
+    component: ReservacionesEmpresaScreen,
+    icon: 'bookmark',
+  },
+  {
+    name: 'Perfil',
+    component: PerfilScreen,
+    icon: 'person',
+  },
+];
 
 export default function EmpresaTabs() {
   return (
     <Tab.Navigator
-      initialRouteName="Dashboard"
-      screenOptions={({ route }) => ({
+      initialRouteName="Inicio"
+      screenOptions={({ route }) => {
+        const tab = TABS.find(t => t.name === route.name);
+        return {
         headerShown: false,
-        tabBarActiveTintColor: '#0984A3',
-        tabBarInactiveTintColor: '#888',
-        tabBarStyle: { backgroundColor: '#fff', borderTopWidth: 0.5, borderTopColor: '#eee' },
-        tabBarIcon: ({ color, size }) => {
-          if (route.name === 'Dashboard') return <Ionicons name="home" size={size} color={color} />;
-          if (route.name === 'MisLugares') return <Ionicons name="business" size={size} color={color} />;
-          if (route.name === 'CrearLugar') return <Ionicons name="add-circle" size={size} color={color} />;
-          if (route.name === 'Estadisticas') return <Ionicons name="stats-chart" size={size} color={color} />;
-          if (route.name === 'Perfil') return <Ionicons name="person" size={size} color={color} />;
-          if (route.name === 'Promociones') return <Ionicons name="pricetags" size={size} color={color} />;
-          if (route.name === 'Reservaciones') return <Ionicons name="bookmark" size={size} color={color} />;
-          if (route.name === 'Notificaciones') return <Ionicons name="notifications" size={size} color={color} />;
+        tabBarActiveTintColor: '#2E5006',
+        tabBarInactiveTintColor: '#A3B65A',
+        tabBarStyle: {
+          backgroundColor: '#fff',
+          borderTopWidth: 1,
+          borderTopColor: '#E8F5E9',
+            height: 60,
+            paddingBottom: 6,
+            paddingTop: 6,
+          elevation: 8,
+            borderRadius: 20,
+            marginHorizontal: 16,
+          position: 'absolute',
+          left: 0,
+          right: 0,
+            bottom: 16,
         },
-      })}
+        tabBarLabelStyle: {
+            fontSize: 13,
+          fontWeight: '600',
+        },
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? tab.icon : tab.icon + '-outline'}
+              size={focused ? 26 : 24}
+              color={color}
+            />
+          ),
+        };
+      }}
     >
-      <Tab.Screen name="Dashboard" component={EmpresaDashboardScreen} options={{ tabBarLabel: 'Inicio' }} />
-      <Tab.Screen name="MisLugares" component={EmpresaPanelScreen} options={{ tabBarLabel: 'Mis Lugares' }} />
-      <Tab.Screen name="CrearLugar" component={CrearLugarScreen} options={{ tabBarLabel: 'Crear Lugar' }} />
-      <Tab.Screen name="Estadisticas" component={EstadisticasScreen} options={{ tabBarLabel: 'Estadísticas' }} />
-      <Tab.Screen name="Promociones" component={PromocionesScreen} options={{ tabBarLabel: 'Promos' }} />
-      <Tab.Screen name="Reservaciones" component={ReservacionesEmpresaScreen} options={{ tabBarLabel: 'Reservas' }} />
-      <Tab.Screen name="Notificaciones" component={NotificacionesScreen} options={{ tabBarLabel: 'Notis' }} />
-      <Tab.Screen name="Perfil" component={PerfilScreen} options={{ tabBarLabel: 'Perfil' }} />
+      {TABS.map(tab => (
+      <Tab.Screen 
+          key={tab.name}
+          name={tab.name}
+          component={tab.component}
+          options={{ tabBarLabel: tab.name }}
+        />
+      ))}
     </Tab.Navigator>
   );
-} 
+}

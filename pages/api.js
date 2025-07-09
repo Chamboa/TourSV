@@ -296,14 +296,24 @@ export async function getAllPromotions(filters = {}) {
   }
 }
 // NOTIFICACIONES
-export async function getNotifications(empresaId) {
+export async function getNotifications(userId) {
   try {
-    const res = await fetch(`${API_URL}/notifications?empresaId=${empresaId}`);
+    const res = await fetch(`${API_URL}/notifications?userId=${userId}`);
     return await res.json();
   } catch (e) {
     return handleApiError(e);
   }
 }
+
+export async function getUnreadNotifications(userId) {
+  try {
+    const res = await fetch(`${API_URL}/notifications/unread/${userId}`);
+    return await res.json();
+  } catch (e) {
+    return handleApiError(e);
+  }
+}
+
 export async function createNotification(data) {
   try {
     const res = await fetch(`${API_URL}/notifications`, {
@@ -316,6 +326,42 @@ export async function createNotification(data) {
     return handleApiError(e);
   }
 }
+
+export async function markNotificationAsRead(notificationId) {
+  try {
+    const res = await fetch(`${API_URL}/notifications/${notificationId}/read`, {
+      method: 'PUT'
+    });
+    return await res.json();
+  } catch (e) {
+    return handleApiError(e);
+  }
+}
+
+export async function markAllNotificationsAsRead(userId) {
+  try {
+    const res = await fetch(`${API_URL}/notifications/read-all/${userId}`, {
+      method: 'PUT'
+    });
+    return await res.json();
+  } catch (e) {
+    return handleApiError(e);
+  }
+}
+
+export async function updatePushToken(userId, pushToken) {
+  try {
+    const res = await fetch(`${API_URL}/notifications/push-token/${userId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pushToken })
+    });
+    return await res.json();
+  } catch (e) {
+    return handleApiError(e);
+  }
+}
+
 export async function deleteNotification(id) {
   try {
     const res = await fetch(`${API_URL}/notifications/${id}`, { method: 'DELETE' });

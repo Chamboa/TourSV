@@ -6,6 +6,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useFavoritos } from './FavoritosContext';
 import { getPlaces, getPromotionsDestacadas } from './api';
 
+
 const { width, height } = Dimensions.get('window');
 const userImg = 'https://randomuser.me/api/portraits/women/44.jpg'; // Puedes cambiar por la URL real
 
@@ -300,14 +301,11 @@ const HomeScreen = () => {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.openDrawer()}>
-          <Ionicons name="menu" size={28} color="#333" />
-        </TouchableOpacity>
         <View>
           <Text style={styles.hola}>Hola, Andrea</Text>
           <Text style={styles.bienvenido}>Bienvenid@ a TourSV</Text>
         </View>
-        <TouchableOpacity onPress={() => navigation.navigate('ClienteTabs', { screen: 'Perfil' })}>
+        <TouchableOpacity onPress={() => navigation.navigate('Perfil')}>
           <Image source={{ uri: userImg }} style={styles.avatar} />
         </TouchableOpacity>
       </View>
@@ -362,8 +360,54 @@ const HomeScreen = () => {
           <ActivityIndicator size="large" color="#000" />
         </View>
       ) : (
-        renderStack()
+        <>
+          {renderStack()}
+          {/* Acceso Rápido más abajo y separado */}
+          <View style={[styles.quickAccessContainer, { marginTop: 32 }]}> 
+            <Text style={styles.quickAccessTitle}>Acceso Rápido</Text>
+            <View style={styles.quickAccessGrid}>
+              <TouchableOpacity 
+                style={styles.quickAccessItem} 
+                onPress={() => navigation.navigate('Favoritos')}
+              >
+                <View style={[styles.quickAccessIcon, { backgroundColor: '#FF6B6B' }]}> 
+                  <Ionicons name="heart" size={24} color="#fff" />
+                </View>
+                <Text style={styles.quickAccessText}>Favoritos</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.quickAccessItem}
+                onPress={() => navigation.navigate('ClienteTabs', { screen: 'MisViajes', params: { initialTab: 'promociones' } })}
+              >
+                <View style={[styles.quickAccessIcon, { backgroundColor: '#4ECDC4' }]}> 
+                  <Ionicons name="pricetags" size={24} color="#fff" />
+                </View>
+                <Text style={styles.quickAccessText}>Promociones</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.quickAccessItem}
+                onPress={() => navigation.navigate('ClienteTabs', { screen: 'MisViajes', params: { initialTab: 'reservaciones' } })}
+              >
+                <View style={[styles.quickAccessIcon, { backgroundColor: '#45B7D1' }]}> 
+                  <Ionicons name="bookmark" size={24} color="#fff" />
+                </View>
+                <Text style={styles.quickAccessText}>Reservaciones</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.quickAccessItem}
+                onPress={() => navigation.navigate('Notificaciones')}
+              >
+                <View style={[styles.quickAccessIcon, { backgroundColor: '#96CEB4' }]}> 
+                  <Ionicons name="notifications" size={24} color="#fff" />
+                </View>
+                <Text style={styles.quickAccessText}>Notificaciones</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </>
       )}
+      
+
     </View>
   );
 };
@@ -557,9 +601,50 @@ const styles = StyleSheet.create({
   },
   promoDesc: {
     fontFamily: 'Roboto_400Regular',
-    fontSize: width * 0.03,
+    fontSize: width * 0.032,
     color: '#888',
+  },
+  quickAccessContainer: {
+    marginHorizontal: width * 0.06,
+    marginBottom: height * 0.02,
+  },
+  quickAccessTitle: {
+    fontFamily: 'Roboto_700Bold',
+    fontSize: width * 0.038,
+    color: '#222',
+    marginBottom: height * 0.015,
+  },
+  quickAccessGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+  },
+  quickAccessItem: {
+    width: (width - width * 0.12 - 30) / 2,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    alignItems: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  quickAccessIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: 8,
+  },
+  quickAccessText: {
+    fontFamily: 'Roboto_700Bold',
+    fontSize: width * 0.032,
+    color: '#222',
+    textAlign: 'center',
   },
   promoDetails: {
     flexDirection: 'row',
