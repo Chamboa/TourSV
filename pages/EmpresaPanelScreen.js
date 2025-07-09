@@ -2,8 +2,29 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, Dimensions, ActivityIndicator, SafeAreaView, ScrollView, TextInput } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getPlaces, updatePlace, deletePlace } from './api';
+import * as ImagePicker from 'expo-image-picker';
+import axios from 'axios';
+import { Image, Linking } from 'react-native';
 
 const { width } = Dimensions.get('window');
+
+const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/dbai58ub1/image/upload';
+const CLOUDINARY_UPLOAD_PRESET = 'ml_default';
+async function uploadToCloudinary(uri) {
+  const data = new FormData();
+  data.append('file', {
+    uri,
+    type: 'image/jpeg',
+    name: 'upload.jpg',
+  });
+  data.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+  data.append('api_key', '641663797225355');
+  data.append('timestamp', Math.floor(Date.now() / 1000));
+  const res = await axios.post(CLOUDINARY_URL, data, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return res.data.secure_url;
+}
 
 export default function EmpresaPanelScreen({ navigation }) {
   const [lugares, setLugares] = useState([]);
@@ -12,6 +33,8 @@ export default function EmpresaPanelScreen({ navigation }) {
   const [editForm, setEditForm] = useState({ nombre: '', dept: '', img: '', descripcion: '' });
   const [isLoading, setIsLoading] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [servicioInput, setServicioInput] = useState('');
 
   useEffect(() => {
     (async () => {
@@ -35,9 +58,68 @@ export default function EmpresaPanelScreen({ navigation }) {
   }
 
   const handleEdit = (lugar) => {
-    setEditForm({ nombre: lugar.nombre, dept: lugar.dept, img: lugar.img, descripcion: lugar.descripcion });
+    setEditForm({
+      nombre: lugar.nombre,
+      dept: lugar.dept,
+      img: lugar.img,
+      galeria: lugar.galeria || [],
+      ubicacion: lugar.ubicacion || '',
+      horario: lugar.horario || '',
+      precio: lugar.precio || '',
+      servicios: lugar.servicios || [],
+      descripcion: lugar.descripcion || ''
+    });
     setEditId(lugar._id);
     setShowEdit(true);
+  };
+  // Imagen principal
+  const pickMainImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsMultipleSelection: false,
+      quality: 1,
+    });
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      setUploading(true);
+      try {
+        const url = await uploadToCloudinary(result.assets[0].uri);
+        setEditForm(f => ({ ...f, img: url }));
+      } catch (e) {
+        Alert.alert('Error', 'No se pudo subir la imagen');
+      }
+      setUploading(false);
+    }
+  };
+  // Galería
+  const pickGalleryImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsMultipleSelection: false,
+      quality: 1,
+    });
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      setUploading(true);
+      try {
+        const url = await uploadToCloudinary(result.assets[0].uri);
+        setEditForm(f => ({ ...f, galeria: [...(f.galeria || []), url] }));
+      } catch (e) {
+        Alert.alert('Error', 'No se pudo subir la imagen');
+      }
+      setUploading(false);
+    }
+  };
+  const handleRemoveGaleria = (idx) => {
+    setEditForm(f => ({ ...f, galeria: (f.galeria || []).filter((_, i) => i !== idx) }));
+  };
+
+  const handleAddServicio = () => {
+    if (servicioInput.trim()) {
+      setEditForm(f => ({ ...f, servicios: [...(f.servicios || []), servicioInput.trim()] }));
+      setServicioInput('');
+    }
+  };
+  const handleRemoveServicio = (idx) => {
+    setEditForm(f => ({ ...f, servicios: (f.servicios || []).filter((_, i) => i !== idx) }));
   };
 
   const handleUpdate = async () => {
@@ -76,8 +158,79 @@ export default function EmpresaPanelScreen({ navigation }) {
                 <Text style={styles.sectionTitle}>Editar lugar</Text>
                 <TextInput style={styles.input} placeholder="Nombre*" value={editForm.nombre} onChangeText={v => setEditForm(f => ({ ...f, nombre: v }))} />
                 <TextInput style={styles.input} placeholder="Departamento*" value={editForm.dept} onChangeText={v => setEditForm(f => ({ ...f, dept: v }))} />
-                <TextInput style={styles.input} placeholder="Imagen (URL)" value={editForm.img} onChangeText={v => setEditForm(f => ({ ...f, img: v }))} />
-                <TextInput style={styles.input} placeholder="Descripción" value={editForm.descripcion} onChangeText={v => setEditForm(f => ({ ...f, descripcion: v }))} />
+                <TextInput style={styles.input} placeholder="Ubicación (Google Maps, dirección o link)*" value={editForm.ubicacion} onChangeText={v => setEditForm(f => ({ ...f, ubicacion: v }))} />
+                {/* Botón para abrir ubicación en Google Maps */}
+                {editForm.ubicacion ? (
+                  <TouchableOpacity
+                    style={{ marginBottom: 10, alignSelf: 'flex-start' }}
+                    onPress={() => {
+                      const url = editForm.ubicacion.startsWith('http')
+                        ? editForm.ubicacion
+                        : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(editForm.ubicacion)}`;
+                      Linking.openURL(url);
+                    }}
+                  >
+                    <Text style={{ color: '#0984A3', textDecorationLine: 'underline' }}>Ver en Google Maps</Text>
+                  </TouchableOpacity>
+                ) : null}
+                <TextInput style={styles.input} placeholder="Horario (ej: Lunes a Domingo, 10:00am - 10:00pm)" value={editForm.horario} onChangeText={v => setEditForm(f => ({ ...f, horario: v }))} />
+                <TextInput style={styles.input} placeholder="Precio (ej: Entrada gratuita, atracciones desde $1)" value={editForm.precio} onChangeText={v => setEditForm(f => ({ ...f, precio: v }))} />
+                {/* Servicios */}
+                <View style={{ width: '100%', marginBottom: 10 }}>
+                  <Text style={{ fontWeight: 'bold', color: '#0984A3', marginBottom: 4 }}>Servicios</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <TextInput style={[styles.input, { flex: 1, marginBottom: 0 }]} placeholder="Agregar servicio" value={servicioInput} onChangeText={setServicioInput} />
+                    <TouchableOpacity style={[styles.button, { marginLeft: 6, paddingHorizontal: 12, paddingVertical: 10 }]} onPress={handleAddServicio}><Text style={styles.buttonText}>+</Text></TouchableOpacity>
+                  </View>
+                  {Array.isArray(editForm.servicios) && editForm.servicios.length > 0 && (
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: 6 }}>
+                      {editForm.servicios.map((serv, idx) => (
+                        <View key={idx} style={{ backgroundColor: '#eee', borderRadius: 8, padding: 6, marginRight: 6, marginBottom: 6, flexDirection: 'row', alignItems: 'center' }}>
+                          <Text style={{ color: '#444' }}>{serv}</Text>
+                          <TouchableOpacity onPress={() => handleRemoveServicio(idx)}><Text style={{ color: '#E74C3C', marginLeft: 4 }}>x</Text></TouchableOpacity>
+                        </View>
+                      ))}
+                    </View>
+                  )}
+                </View>
+                {/* Imagen principal */}
+                <View style={{ width: '100%', marginBottom: 10 }}>
+                  <Text style={{ fontWeight: 'bold', color: '#0984A3', marginBottom: 4 }}>Imagen principal</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <TextInput style={[styles.input, { flex: 1, marginBottom: 0 }]} placeholder="URL de imagen principal" value={editForm.img} onChangeText={v => setEditForm(f => ({ ...f, img: v }))} />
+                    <TouchableOpacity style={[styles.button, { marginLeft: 6, paddingHorizontal: 12, paddingVertical: 10 }]} onPress={pickMainImage}>
+                      <Text style={styles.buttonText}>Galería</Text>
+                    </TouchableOpacity>
+                  </View>
+                  {/* Vista previa imagen principal */}
+                  {editForm.img ? (
+                    <Image source={{ uri: editForm.img }} style={{ width: 120, height: 80, borderRadius: 8, marginTop: 6, alignSelf: 'flex-start', backgroundColor: '#eee' }} />
+                  ) : null}
+                </View>
+                {/* Galería de fotos */}
+                <View style={{ width: '100%', marginBottom: 10 }}>
+                  <Text style={{ fontWeight: 'bold', color: '#0984A3', marginBottom: 4 }}>Galería de fotos</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <TouchableOpacity style={[styles.button, { marginRight: 6, paddingHorizontal: 12, paddingVertical: 10 }]} onPress={pickGalleryImage}>
+                      <Text style={styles.buttonText}>+ Galería</Text>
+                    </TouchableOpacity>
+                  </View>
+                  {/* Vista previa galería */}
+                  {Array.isArray(editForm.galeria) && editForm.galeria.length > 0 && (
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 6, maxHeight: 90 }}>
+                      {editForm.galeria.map((url, idx) => (
+                        <View key={idx} style={{ backgroundColor: '#eee', borderRadius: 8, padding: 2, marginRight: 8, alignItems: 'center', flexDirection: 'row' }}>
+                          <Image source={{ uri: url }} style={{ width: 80, height: 60, borderRadius: 6 }} />
+                          <TouchableOpacity onPress={() => handleRemoveGaleria(idx)} style={{ position: 'absolute', top: 2, right: 2, backgroundColor: '#fff', borderRadius: 10, padding: 2 }}>
+                            <Text style={{ color: '#E74C3C', fontWeight: 'bold' }}>×</Text>
+                          </TouchableOpacity>
+                        </View>
+                      ))}
+                    </ScrollView>
+                  )}
+                </View>
+                {uploading && <ActivityIndicator size="large" color="#0984A3" style={{ marginBottom: 10 }} />}
+                <TextInput style={styles.input} placeholder="Descripción" value={editForm.descripcion} onChangeText={v => setEditForm(f => ({ ...f, descripcion: v }))} multiline numberOfLines={3} />
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                   <TouchableOpacity style={styles.button} onPress={handleUpdate} disabled={isLoading}>
                     <Text style={styles.buttonText}>Actualizar</Text>

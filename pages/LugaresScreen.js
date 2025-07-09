@@ -93,7 +93,16 @@ const LugaresScreen = () => {
           contentContainerStyle={styles.cardsGrid}
           renderItem={({ item }) => (
             <View style={styles.card}>
+              {/* Imagen principal */}
               <Image source={{ uri: item.img }} style={styles.cardImg} />
+              {/* Mini galería */}
+              {Array.isArray(item.galeria) && item.galeria.length > 0 && (
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ position: 'absolute', bottom: 8, left: 8, right: 8, height: 32 }}>
+                  {item.galeria.slice(0, 3).map((url, idx) => (
+                    <Image key={idx} source={{ uri: url }} style={{ width: 32, height: 24, borderRadius: 4, marginRight: 4, borderWidth: 1, borderColor: '#fff' }} />
+                  ))}
+                </ScrollView>
+              )}
               <View style={styles.cardOverlay} />
               <View style={styles.cardContent}>
                 <Text style={styles.cardDept}>{item.dept}</Text>
