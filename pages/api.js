@@ -494,3 +494,12 @@ export async function getReservationByCode(codigo) {
     return handleApiError(e);
   }
 } 
+
+export const addPlaceView = async (placeId) => {
+  try {
+    const res = await fetch(`${API_URL}/places/${placeId}/view`, { method: 'POST' });
+    return await res.json();
+  } catch (e) {
+    return { error: e.message || 'Error de red' };
+  }
+}; 

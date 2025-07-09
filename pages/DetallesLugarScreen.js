@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Image, ScrollView
 import { Ionicons, Feather, MaterialIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useFavoritos } from './FavoritosContext';
-import { getPlace, addReview } from './api';
+import { getPlace, addReview, addPlaceView } from './api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width, height } = Dimensions.get('window');
@@ -60,6 +60,7 @@ const DetallesLugarScreen = () => {
   useEffect(() => {
     if (lugarId) {
       getPlace(lugarId).then(setLugar);
+      addPlaceView(lugarId); // Registrar la vista
     }
   }, [lugarId]);
 

@@ -95,4 +95,19 @@ router.post('/:id/reviews', async (req, res) => {
   }
 });
 
+// Incrementar visitas de un lugar
+router.post('/:id/view', async (req, res) => {
+  try {
+    const place = await Place.findByIdAndUpdate(
+      req.params.id,
+      { $inc: { visitas: 1 } },
+      { new: true }
+    );
+    if (!place) return res.status(404).json({ error: 'Lugar no encontrado' });
+    res.json({ visitas: place.visitas });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al registrar vista' });
+  }
+});
+
 module.exports = router; 

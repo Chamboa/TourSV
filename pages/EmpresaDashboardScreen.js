@@ -35,6 +35,57 @@ export default function EmpresaDashboardScreen({ navigation }) {
   const totalPromos = 2; // Simulado
   const totalNotis = 3; // Simulado
 
+  // Configuración de métricas
+  const metricCards = [
+    {
+      key: 'lugares',
+      icon: <Ionicons name="business" size={32} color="#0984A3" />,
+      value: lugares.length,
+      label: 'Lugares',
+    },
+    {
+      key: 'favoritos',
+      icon: <Ionicons name="heart" size={32} color="#E17055" />,
+      value: totalFavoritos,
+      label: 'Favoritos',
+    },
+    {
+      key: 'visitas',
+      icon: <Ionicons name="eye" size={32} color="#00B894" />,
+      value: totalVisitas,
+      label: 'Visitas',
+    },
+    {
+      key: 'promos',
+      icon: <Ionicons name="pricetags" size={32} color="#A3B65A" />,
+      value: totalPromos,
+      label: 'Promociones',
+      onPress: () => navigation.navigate('Promociones'),
+    },
+  ];
+
+  // Configuración de accesos rápidos
+  const quickActions = [
+    {
+      key: 'lugares',
+      icon: <MaterialIcons name="place" size={24} color="#0984A3" />,
+      label: 'Lugares',
+      onPress: () => navigation.navigate('Lugares'),
+    },
+    {
+      key: 'crear',
+      icon: <Ionicons name="add-circle" size={24} color="#0984A3" />,
+      label: 'Crear Lugar',
+      onPress: () => navigation.navigate('CrearLugar'),
+    },
+    {
+      key: 'estadisticas',
+      icon: <Ionicons name="stats-chart" size={24} color="#0984A3" />,
+      label: 'Estadísticas',
+      onPress: () => navigation.navigate('Estadisticas'),
+    },
+  ];
+
   if (isLoading) return <View style={styles.container}><ActivityIndicator size="large" color="#0984A3" /></View>;
 
   return (
@@ -44,54 +95,42 @@ export default function EmpresaDashboardScreen({ navigation }) {
         <Text style={styles.headerTitle}>Panel de Empresa</Text>
         <View style={{ width: 28 }} />
       </View>
-      
       <ScrollView style={styles.scroll} contentContainerStyle={{ alignItems: 'center', padding: 18 }}>
         <Text style={styles.title}>Panel de Empresa</Text>
-        <View style={styles.cardsRow}>
-          <View style={styles.card}>
-            <Ionicons name="business" size={32} color="#0984A3" />
-            <Text style={styles.cardValue}>{lugares.length}</Text>
-            <Text style={styles.cardLabel}>Lugares</Text>
-          </View>
-          <View style={styles.card}>
-            <Ionicons name="heart" size={32} color="#E17055" />
-            <Text style={styles.cardValue}>{totalFavoritos}</Text>
-            <Text style={styles.cardLabel}>Favoritos</Text>
-          </View>
+        {/* Métricas */}
+        <View style={styles.cardsRowWrap}>
+          {metricCards.map(card => (
+            <TouchableOpacity
+              key={card.key}
+              style={styles.card}
+              onPress={card.onPress}
+              activeOpacity={card.onPress ? 0.7 : 1}
+            >
+              {card.icon}
+              <Text style={styles.cardValue}>{card.value}</Text>
+              <Text style={styles.cardLabel}>{card.label}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
-        <View style={styles.cardsRow}>
-          <View style={styles.card}>
-            <Ionicons name="eye" size={32} color="#00B894" />
-            <Text style={styles.cardValue}>{totalVisitas}</Text>
-            <Text style={styles.cardLabel}>Visitas</Text>
-          </View>
-          <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('Promociones')}>
-            <Ionicons name="pricetags" size={32} color="#A3B65A" />
-            <Text style={styles.cardValue}>{totalPromos}</Text>
-            <Text style={styles.cardLabel}>Promociones</Text>
-          </TouchableOpacity>
-        </View>
+        {/* Notificaciones */}
         <TouchableOpacity style={styles.notifCard} onPress={() => navigation.navigate('Notificaciones')}>
           <Ionicons name="notifications" size={28} color="#fff" />
           <Text style={styles.notifText}>Tienes {totalNotis} notificaciones nuevas</Text>
         </TouchableOpacity>
+        {/* Accesos rápidos */}
         <View style={styles.quickRow}>
-          <TouchableOpacity style={styles.quickBtn} onPress={() => navigation.navigate('Lugares')}>
-            <MaterialIcons name="place" size={24} color="#0984A3" />
-            <Text style={styles.quickText}>Lugares</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.quickBtn} onPress={() => navigation.navigate('CrearLugar')}>
-            <Ionicons name="add-circle" size={24} color="#0984A3" />
-            <Text style={styles.quickText}>Crear Lugar</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.quickBtn} onPress={() => navigation.navigate('Estadisticas')}>
-            <Ionicons name="stats-chart" size={24} color="#0984A3" />
-            <Text style={styles.quickText}>Estadísticas</Text>
-          </TouchableOpacity>
+          {quickActions.map(action => (
+            <TouchableOpacity
+              key={action.key}
+              style={styles.quickBtn}
+              onPress={action.onPress}
+            >
+              {action.icon}
+              <Text style={styles.quickText}>{action.label}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
       </ScrollView>
-      
-
     </View>
   );
 }
@@ -125,4 +164,5 @@ const styles = StyleSheet.create({
   quickRow: { flexDirection: 'row', justifyContent: 'space-between', width: '100%', marginTop: 10 },
   quickBtn: { flex: 1, backgroundColor: '#fff', borderRadius: 12, padding: 12, alignItems: 'center', marginHorizontal: 4, elevation: 1 },
   quickText: { color: '#0984A3', fontWeight: 'bold', fontSize: 14, marginTop: 4 },
+  cardsRowWrap: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', width: '100%', marginBottom: 12 },
 }); 

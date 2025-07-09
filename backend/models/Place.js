@@ -25,6 +25,7 @@ const PlaceSchema = new mongoose.Schema({
   contacto: { type: String },
   web: { type: String },
   clima: { type: String },
+  visitas: { type: Number, default: 0 },
   reseñas: [ReviewSchema],
   recomendaciones: [RecommendationSchema],
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
