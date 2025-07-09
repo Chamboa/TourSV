@@ -55,6 +55,7 @@ router.post('/', requireEmpresaOrAdmin, async (req, res) => {
     await place.save();
     res.status(201).json(place);
   } catch (err) {
+    console.error('Error al crear lugar:', err); // Log detallado
     res.status(500).json({ error: 'Error al crear lugar' });
   }
 });

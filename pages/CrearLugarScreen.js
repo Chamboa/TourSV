@@ -28,19 +28,33 @@ export default function CrearLugarScreen({ navigation }) {
   const CLOUDINARY_UPLOAD_PRESET = '<tu_upload_preset>';
 
   const pickImages = async () => {
-    let permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (permissionResult.status !== 'granted') {
-      Alert.alert('Permiso requerido', 'Se necesita permiso para acceder a la galería.');
-      return;
-    }
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaType.IMAGE,
-      allowsMultipleSelection: true,
-      quality: 0.7,
-    });
-    if (!result.canceled) {
-      const assets = result.assets || result.selected || [result];
-      setImagenes([...imagenes, ...assets.map(a => ({ uri: a.uri }))]);
+    try {
+      let permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      console.log('Permiso galería:', permissionResult);
+      if (permissionResult.status !== 'granted') {
+        Alert.alert('Permiso requerido', 'Se necesita permiso para acceder a la galería.');
+        return;
+      }
+      let result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsMultipleSelection: Platform.OS === 'ios',
+        quality: 0.7,
+      });
+      console.log('Resultado picker:', result);
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        if (Platform.OS === 'ios') {
+          setImagenes([...imagenes, ...result.assets.map(a => ({ uri: a.uri }))]);
+        } else {
+          setImagenes([...imagenes, { uri: result.assets[0].uri }]);
+        }
+      } else if (result.canceled) {
+        console.log('Picker cancelado por el usuario');
+      } else {
+        Alert.alert('Error', 'No se seleccionaron imágenes.');
+      }
+    } catch (e) {
+      console.log('Error en pickImages:', e);
+      Alert.alert('Error', 'Ocurrió un problema al abrir la galería: ' + (e?.message || e));
     }
   };
 
@@ -98,22 +112,46 @@ export default function CrearLugarScreen({ navigation }) {
       return;
     }
     setLoading(true);
-    let urls = [];
-    for (let img of imagenes) {
-      if (!img.urlCloudinary) {
-        const url = await subirImagenACloudinary(img);
-        if (url) urls.push(url);
+    try {
+      // Subir imágenes a Cloudinary (ya implementado)
+      const urls = await Promise.all(
+        imagenes.map(async (img) => {
+          if (img.uri && !img.uri.startsWith('http')) {
+            const data = new FormData();
+            data.append('file', { uri: img.uri, name: 'image.jpg', type: 'image/jpeg' });
+            data.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+            const res = await axios.post(CLOUDINARY_URL, data, { headers: { 'Content-Type': 'multipart/form-data' } });
+            return res.data.secure_url;
+          } else {
+            return img.uri;
+          }
+        })
+      );
+      // --- CORRECCIÓN DE CAMPOS ---
+      const data = {
+        nombre,
+        dept: departamento,
+        descripcion,
+        galeria: urls,
+        img: urls[0] || '',
+        ubicacion,
+        horario: horarios.join(', '),
+        precio,
+        servicios,
+      };
+      console.log('Datos enviados a createPlace:', data, user.id);
+      const res = await createPlace(data, user.id);
+      console.log('Respuesta createPlace:', res);
+      setLoading(false);
+      if (res && res._id) {
+        Alert.alert('¡Éxito!', 'Lugar creado correctamente.');
+        navigation.goBack();
       } else {
-        urls.push(img.urlCloudinary);
+        Alert.alert('Error', res?.error || 'No se pudo crear el lugar.');
       }
-    }
-    const res = await createPlace({ nombre, descripcion, departamento, ubicacion, imagenes: urls, horarios, precio, servicios }, user.id);
-    setLoading(false);
-    if (res && res._id) {
-      Alert.alert('¡Listo!', 'Lugar creado exitosamente.');
-      navigation.goBack();
-    } else {
-      Alert.alert('Error', res?.error || 'No se pudo crear el lugar.');
+    } catch (e) {
+      setLoading(false);
+      Alert.alert('Error', 'Ocurrió un error al crear el lugar.');
     }
   };
 
